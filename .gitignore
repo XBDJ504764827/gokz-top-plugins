@@ -1,0 +1,4 @@
+.DS_Store
+sm/
+addons/sourcemod/plugins/*.smx
+
