@@ -9,7 +9,7 @@
 #define GOKZ_TOP_VERSION "0.1.0"
 #define GOKZ_TOP_DEFAULT_API_BASE_URL "https://staging-api.kzcharm.com"
 #define GOKZ_TOP_MAX_URL_LENGTH 512
-#define GOKZ_TOP_MAX_BODY_LENGTH 2048
+#define GOKZ_TOP_MAX_BODY_LENGTH 16384
 #define GOKZ_TOP_MAX_PATH_LENGTH 128
 
 public Plugin myinfo =
