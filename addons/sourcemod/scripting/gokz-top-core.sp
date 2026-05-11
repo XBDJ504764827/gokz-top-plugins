@@ -1,5 +1,6 @@
 #include <sourcemod>
 #include <SteamWorks>
+#include <autoexecconfig>
 
 #include <gokz/top>
 
@@ -11,6 +12,8 @@
 #define GOKZ_TOP_MAX_URL_LENGTH 512
 #define GOKZ_TOP_MAX_BODY_LENGTH 16384
 #define GOKZ_TOP_MAX_PATH_LENGTH 128
+#define GOKZ_TOP_CFG_FOLDER "sourcemod/gokz-top"
+#define GOKZ_TOP_USER_AGENT "gokz-top-core/" ... GOKZ_TOP_VERSION
 
 public Plugin myinfo =
 {
@@ -28,6 +31,9 @@ ConVar gCV_RequestTimeout;
 ConVar gCV_RetryCount;
 ConVar gCV_RetryDelay;
 ConVar gCV_Debug;
+char gC_RequestPathBuffer[GOKZ_TOP_MAX_PATH_LENGTH];
+char gC_RequestBodyBuffer[GOKZ_TOP_MAX_BODY_LENGTH];
+char gC_RequestURLBuffer[GOKZ_TOP_MAX_URL_LENGTH];
 
 
 
@@ -44,22 +50,26 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int errMax)
 
 public void OnPluginStart()
 {
-	gCV_APIBaseURL = CreateConVar("gokz_top_api_base_url", GOKZ_TOP_DEFAULT_API_BASE_URL,
+	AutoExecConfig_SetFile("gokz-top-core", GOKZ_TOP_CFG_FOLDER);
+	AutoExecConfig_SetCreateFile(true);
+
+	gCV_APIBaseURL = AutoExecConfig_CreateConVar("gokz_top_api_base_url", GOKZ_TOP_DEFAULT_API_BASE_URL,
 		"Base URL for the gokz-top API, without a trailing slash.");
-	gCV_APIKey = CreateConVar("gokz_top_api_key", "",
+	gCV_APIKey = AutoExecConfig_CreateConVar("gokz_top_api_key", "",
 		"Optional bearer API key for future authenticated gokz-top endpoints.", FCVAR_PROTECTED);
-	gCV_ServerGroupKey = CreateConVar("gokz_top_server_group_key", "",
+	gCV_ServerGroupKey = AutoExecConfig_CreateConVar("gokz_top_server_group_key", "",
 		"Server group API key sent as X-Server-Group-Key for server/player session endpoints.", FCVAR_PROTECTED);
-	gCV_RequestTimeout = CreateConVar("gokz_top_request_timeout", "10",
+	gCV_RequestTimeout = AutoExecConfig_CreateConVar("gokz_top_request_timeout", "10",
 		"HTTP request timeout in seconds.", _, true, 1.0, true, 60.0);
-	gCV_RetryCount = CreateConVar("gokz_top_retry_count", "2",
+	gCV_RetryCount = AutoExecConfig_CreateConVar("gokz_top_retry_count", "2",
 		"Number of retry attempts after the initial HTTP request fails.", _, true, 0.0, true, 5.0);
-	gCV_RetryDelay = CreateConVar("gokz_top_retry_delay", "5.0",
+	gCV_RetryDelay = AutoExecConfig_CreateConVar("gokz_top_retry_delay", "5.0",
 		"Delay in seconds before retrying a failed HTTP request.", _, true, 1.0, true, 30.0);
-	gCV_Debug = CreateConVar("gokz_top_debug", "0",
+	gCV_Debug = AutoExecConfig_CreateConVar("gokz_top_debug", "0",
 		"Log gokz-top HTTP request attempts and failures.", _, true, 0.0, true, 1.0);
 
-	AutoExecConfig(true, "gokz-top-core");
+	AutoExecConfig_ExecuteFile();
+	AutoExecConfig_CleanFile();
 }
 
 
@@ -68,8 +78,7 @@ public void OnPluginStart()
 
 public int Native_PostJSON(Handle plugin, int numParams)
 {
-	char path[GOKZ_TOP_MAX_PATH_LENGTH];
-	GetNativeString(1, path, sizeof(path));
+	GetNativeString(1, gC_RequestPathBuffer, sizeof(gC_RequestPathBuffer));
 
 	int bodyLength;
 	GetNativeStringLength(2, bodyLength);
@@ -79,16 +88,14 @@ public int Native_PostJSON(Handle plugin, int numParams)
 		return false;
 	}
 
-	char body[GOKZ_TOP_MAX_BODY_LENGTH];
-	GetNativeString(2, body, sizeof(body));
+	GetNativeString(2, gC_RequestBodyBuffer, sizeof(gC_RequestBodyBuffer));
 
-	return PostJSON(path, body);
+	return PostJSON(gC_RequestPathBuffer, gC_RequestBodyBuffer);
 }
 
 public int Native_PostSessionEvent(Handle plugin, int numParams)
 {
-	char event[GOKZ_TOP_MAX_PATH_LENGTH];
-	GetNativeString(1, event, sizeof(event));
+	GetNativeString(1, gC_RequestPathBuffer, sizeof(gC_RequestPathBuffer));
 
 	int bodyLength;
 	GetNativeStringLength(2, bodyLength);
@@ -98,10 +105,9 @@ public int Native_PostSessionEvent(Handle plugin, int numParams)
 		return false;
 	}
 
-	char body[GOKZ_TOP_MAX_BODY_LENGTH];
-	GetNativeString(2, body, sizeof(body));
+	GetNativeString(2, gC_RequestBodyBuffer, sizeof(gC_RequestBodyBuffer));
 
-	return PostSessionEvent(event, body);
+	return PostSessionEvent(gC_RequestPathBuffer, gC_RequestBodyBuffer);
 }
 
 
@@ -169,23 +175,25 @@ DataPack CreateRequestPack(const char[] path, const char[] body, int retriesRema
 
 bool SendRequestFromPack(DataPack pack)
 {
-	char path[GOKZ_TOP_MAX_PATH_LENGTH];
-	char body[GOKZ_TOP_MAX_BODY_LENGTH];
 	int retriesRemaining;
-	ReadRequestPack(pack, path, sizeof(path), body, sizeof(body), retriesRemaining);
+	ReadRequestPack(pack,
+		gC_RequestPathBuffer,
+		sizeof(gC_RequestPathBuffer),
+		gC_RequestBodyBuffer,
+		sizeof(gC_RequestBodyBuffer),
+		retriesRemaining);
 
-	char url[GOKZ_TOP_MAX_URL_LENGTH];
-	if (!BuildAPIURL(path, url, sizeof(url)))
+	if (!BuildAPIURL(gC_RequestPathBuffer, gC_RequestURLBuffer, sizeof(gC_RequestURLBuffer)))
 	{
 		delete pack;
 		return false;
 	}
 
-	Handle request = SteamWorks_CreateHTTPRequest(k_EHTTPMethodPOST, url);
+	Handle request = SteamWorks_CreateHTTPRequest(k_EHTTPMethodPOST, gC_RequestURLBuffer);
 	if (request == null)
 	{
-		LogError("[gokz-top-core] Failed to create HTTP request for %s", path);
-		RetryOrDelete(path, body, retriesRemaining, "create-request");
+		LogError("[gokz-top-core] Failed to create HTTP request for %s", gC_RequestPathBuffer);
+		RetryOrDelete(gC_RequestPathBuffer, gC_RequestBodyBuffer, retriesRemaining, "create-request");
 		delete pack;
 		return false;
 	}
@@ -195,19 +203,25 @@ bool SendRequestFromPack(DataPack pack)
 	SteamWorks_SetHTTPRequestHeaderValue(request, "Accept", "application/json");
 	SteamWorks_SetHTTPRequestHeaderValue(request, "Content-Type", "application/json");
 	SteamWorks_SetHTTPRequestHeaderValue(request, "X-Request-Origin", "gokz-top-core/" ... GOKZ_TOP_VERSION);
-	SteamWorks_SetHTTPRequestRawPostBody(request, "application/json", body, strlen(body));
+	SteamWorks_SetHTTPRequestHeaderValue(request, "User-Agent", GOKZ_TOP_USER_AGENT);
+	SteamWorks_SetHTTPRequestUserAgentInfo(request, GOKZ_TOP_USER_AGENT);
+	SteamWorks_SetHTTPRequestRawPostBody(
+		request,
+		"application/json",
+		gC_RequestBodyBuffer,
+		strlen(gC_RequestBodyBuffer));
 	SteamWorks_SetHTTPRequestAbsoluteTimeoutMS(request, gCV_RequestTimeout.IntValue * 1000);
 	ApplyAuthHeaders(request);
 
 	if (gCV_Debug.BoolValue)
 	{
-		LogMessage("[gokz-top-core] POST %s retries_remaining=%d", path, retriesRemaining);
+		LogMessage("[gokz-top-core] POST %s retries_remaining=%d", gC_RequestPathBuffer, retriesRemaining);
 	}
 
 	if (!SteamWorks_SendHTTPRequest(request))
 	{
-		LogError("[gokz-top-core] Failed to send HTTP request for %s", path);
-		RetryOrDelete(path, body, retriesRemaining, "send-request");
+		LogError("[gokz-top-core] Failed to send HTTP request for %s", gC_RequestPathBuffer);
+		RetryOrDelete(gC_RequestPathBuffer, gC_RequestBodyBuffer, retriesRemaining, "send-request");
 		delete pack;
 		delete request;
 		return false;
@@ -218,16 +232,19 @@ bool SendRequestFromPack(DataPack pack)
 
 public void OnHTTPComplete(Handle request, bool failure, bool requestSuccessful, EHTTPStatusCode statusCode, DataPack pack)
 {
-	char path[GOKZ_TOP_MAX_PATH_LENGTH];
-	char body[GOKZ_TOP_MAX_BODY_LENGTH];
 	int retriesRemaining;
-	ReadRequestPack(pack, path, sizeof(path), body, sizeof(body), retriesRemaining);
+	ReadRequestPack(pack,
+		gC_RequestPathBuffer,
+		sizeof(gC_RequestPathBuffer),
+		gC_RequestBodyBuffer,
+		sizeof(gC_RequestBodyBuffer),
+		retriesRemaining);
 
 	if (IsHTTPResponseOK(failure, requestSuccessful, statusCode))
 	{
 		if (gCV_Debug.BoolValue)
 		{
-			LogMessage("[gokz-top-core] POST %s completed status=%d", path, statusCode);
+			LogMessage("[gokz-top-core] POST %s completed status=%d", gC_RequestPathBuffer, statusCode);
 		}
 
 		delete pack;
@@ -235,14 +252,14 @@ public void OnHTTPComplete(Handle request, bool failure, bool requestSuccessful,
 		return;
 	}
 
-	LogHTTPFailure(request, path, failure, requestSuccessful, statusCode, retriesRemaining);
+	LogHTTPFailure(request, gC_RequestPathBuffer, failure, requestSuccessful, statusCode, retriesRemaining);
 	if (ShouldRetryHTTPFailure(failure, requestSuccessful, statusCode))
 	{
-		RetryOrDelete(path, body, retriesRemaining, "http-complete");
+		RetryOrDelete(gC_RequestPathBuffer, gC_RequestBodyBuffer, retriesRemaining, "http-complete");
 	}
 	else
 	{
-		LogError("[gokz-top-core] Dropping non-retryable request path=%s status=%d", path, statusCode);
+		LogError("[gokz-top-core] Dropping non-retryable request path=%s status=%d", gC_RequestPathBuffer, statusCode);
 	}
 
 	delete pack;
@@ -302,6 +319,7 @@ bool ShouldRetryHTTPFailure(bool failure, bool requestSuccessful, EHTTPStatusCod
 void LogHTTPFailure(Handle request, const char[] path, bool failure, bool requestSuccessful, EHTTPStatusCode statusCode, int retriesRemaining)
 {
 	char response[512];
+	response[0] = '\0';
 	int responseSize;
 	if (SteamWorks_GetHTTPResponseBodySize(request, responseSize) && responseSize > 0)
 	{
@@ -316,6 +334,7 @@ void ApplyAuthHeaders(Handle request)
 {
 	char serverGroupKey[256];
 	gCV_ServerGroupKey.GetString(serverGroupKey, sizeof(serverGroupKey));
+	bool hasServerGroupKey = serverGroupKey[0] != '\0';
 	if (serverGroupKey[0] != '\0')
 	{
 		SteamWorks_SetHTTPRequestHeaderValue(request, "X-Server-Group-Key", serverGroupKey);
@@ -327,6 +346,12 @@ void ApplyAuthHeaders(Handle request)
 	{
 		char bearer[288];
 		Format(bearer, sizeof(bearer), "Bearer %s", apiKey);
+		SteamWorks_SetHTTPRequestHeaderValue(request, "Authorization", bearer);
+	}
+	else if (hasServerGroupKey)
+	{
+		char bearer[288];
+		Format(bearer, sizeof(bearer), "Bearer %s", serverGroupKey);
 		SteamWorks_SetHTTPRequestHeaderValue(request, "Authorization", bearer);
 	}
 }

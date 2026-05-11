@@ -47,6 +47,8 @@ void StartPublicIPRequest(PublicIPProvider provider)
 	SteamWorks_SetHTTPRequestContextValue(request, view_as<int>(provider));
 	SteamWorks_SetHTTPCallbacks(request, OnPublicIPHTTPComplete);
 	SteamWorks_SetHTTPRequestHeaderValue(request, "Accept", "application/json");
+	SteamWorks_SetHTTPRequestHeaderValue(request, "User-Agent", "gokz-top-servers/" ... GOKZ_TOP_SERVERS_VERSION);
+	SteamWorks_SetHTTPRequestUserAgentInfo(request, "gokz-top-servers/" ... GOKZ_TOP_SERVERS_VERSION);
 	SteamWorks_SetHTTPRequestAbsoluteTimeoutMS(request, GOKZ_TOP_PUBLIC_IP_TIMEOUT_MS);
 
 	if (!SteamWorks_SendHTTPRequest(request))

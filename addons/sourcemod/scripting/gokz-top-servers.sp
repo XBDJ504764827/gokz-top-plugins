@@ -11,6 +11,7 @@
 #pragma semicolon 1
 
 #define GOKZ_TOP_SERVERS_VERSION "0.1.0"
+#define GOKZ_TOP_CFG_FOLDER "sourcemod/gokz-top"
 #define GOKZ_TOP_SERVERS_CACHE_PATH "data/gokz-top/public_ip_cache.json"
 #define GOKZ_TOP_SERVERS_CACHE_DIR "data/gokz-top"
 #define GOKZ_TOP_PUBLIC_IP_LENGTH 64
