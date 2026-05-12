@@ -199,7 +199,7 @@ bool AppendJSONString(char[] buffer, int maxLength, const char[] suffix)
 
 int GetHeartbeatPlayerCount()
 {
-	int playerCount;
+	int playerCount = 0;
 	for (int client = 1; client <= MaxClients; client++)
 	{
 		if (IsClientReadyForHeartbeat(client))
@@ -213,7 +213,7 @@ int GetHeartbeatPlayerCount()
 
 void EscapeJSONString(const char[] input, char[] output, int maxLength)
 {
-	int written;
+	int written = 0;
 	for (int i = 0; input[i] != '\0' && written < maxLength - 1; i++)
 	{
 		if ((input[i] == '"' || input[i] == '\\') && written < maxLength - 2)

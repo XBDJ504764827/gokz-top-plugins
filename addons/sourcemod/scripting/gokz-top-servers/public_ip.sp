@@ -61,18 +61,21 @@ void StartPublicIPRequest(PublicIPProvider provider)
 public void OnPublicIPHTTPComplete(Handle request, bool failure, bool requestSuccessful, EHTTPStatusCode statusCode, any data)
 {
 	PublicIPProvider provider = view_as<PublicIPProvider>(data);
+	char response[512];
+	response[0] = '\0';
+	int responseSize;
+	if (SteamWorks_GetHTTPResponseBodySize(request, responseSize) && responseSize > 0)
+	{
+		SteamWorks_GetHTTPResponseBodyData(request, response, sizeof(response));
+	}
 
 	if (!failure
 		&& requestSuccessful
 		&& statusCode >= k_EHTTPStatusCode200OK
 		&& statusCode < k_EHTTPStatusCode300MultipleChoices)
 	{
-		char response[512];
-		int responseSize;
-		if (SteamWorks_GetHTTPResponseBodySize(request, responseSize) && responseSize > 0)
+		if (response[0] != '\0')
 		{
-			SteamWorks_GetHTTPResponseBodyData(request, response, sizeof(response));
-
 			char publicIP[GOKZ_TOP_PUBLIC_IP_LENGTH];
 			if (ExtractPublicIPFromResponse(provider, response, publicIP, sizeof(publicIP)))
 			{
@@ -85,6 +88,13 @@ public void OnPublicIPHTTPComplete(Handle request, bool failure, bool requestSuc
 			}
 		}
 	}
+
+	LogError("[gokz-top-servers] Public IP request failed provider=%d failure=%d request_successful=%d status=%d response=%s",
+		provider,
+		failure,
+		requestSuccessful,
+		statusCode,
+		response);
 
 	delete request;
 	OnPublicIPRequestFailed(provider);

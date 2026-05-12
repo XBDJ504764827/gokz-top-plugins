@@ -140,7 +140,7 @@ bool ExtractJSONStringField(const char[] json, const char[] key, char[] buffer, 
 	}
 	start++;
 
-	int written;
+	int written = 0;
 	while (json[start] != '\0' && json[start] != '"' && written < maxLength - 1)
 	{
 		buffer[written++] = json[start++];
@@ -179,7 +179,7 @@ bool ExtractJSONIntField(const char[] json, const char[] key, int &value)
 	}
 
 	char number[32];
-	int written;
+	int written = 0;
 	while (json[start] != '\0'
 		&& json[start] != ','
 		&& json[start] != '}'
