@@ -69,7 +69,7 @@ If you prefer, the GitHub Actions workflow in `.github/workflows/main.yml` can b
 
 ## Release Tags
 
-Pushes to `main` or `master` automatically create a release tag before compiling:
+Pushes to `main` automatically create a release tag before compiling:
 
 - if no numeric SemVer tag exists, the first tag is `1.0.0`
 - if any pushed commit subject matches Conventional Commit `feat:` or `feat(scope):`, the workflow bumps the minor version, e.g. `1.0.1` → `1.1.0`
