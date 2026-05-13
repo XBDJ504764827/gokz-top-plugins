@@ -189,7 +189,8 @@ bool SendRequestFromPack(DataPack pack)
 		return false;
 	}
 
-	Handle request = SteamWorks_CreateHTTPRequest(k_EHTTPMethodPOST, gC_RequestURLBuffer);
+	EHTTPMethod method = GetHTTPMethodForPath(gC_RequestPathBuffer);
+	Handle request = SteamWorks_CreateHTTPRequest(method, gC_RequestURLBuffer);
 	if (request == null)
 	{
 		LogError("[gokz-top-core] Failed to create HTTP request for %s", gC_RequestPathBuffer);
@@ -230,6 +231,16 @@ bool SendRequestFromPack(DataPack pack)
 	return true;
 }
 
+EHTTPMethod GetHTTPMethodForPath(const char[] path)
+{
+	if (StrEqual(path, "/v1/servers/status"))
+	{
+		return k_EHTTPMethodPUT;
+	}
+
+	return k_EHTTPMethodPOST;
+}
+
 public void OnHTTPComplete(Handle request, bool failure, bool requestSuccessful, EHTTPStatusCode statusCode, DataPack pack)
 {
 	int retriesRemaining;
@@ -244,7 +255,10 @@ public void OnHTTPComplete(Handle request, bool failure, bool requestSuccessful,
 	{
 		if (gCV_Debug.BoolValue)
 		{
-			LogMessage("[gokz-top-core] POST %s completed status=%d", gC_RequestPathBuffer, statusCode);
+			LogMessage("[gokz-top-core] %s %s completed status=%d",
+				StrEqual(gC_RequestPathBuffer, "/v1/servers/status") ? "PUT" : "POST",
+				gC_RequestPathBuffer,
+				statusCode);
 		}
 
 		delete pack;
@@ -323,11 +337,30 @@ void LogHTTPFailure(Handle request, const char[] path, bool failure, bool reques
 	int responseSize;
 	if (SteamWorks_GetHTTPResponseBodySize(request, responseSize) && responseSize > 0)
 	{
-		SteamWorks_GetHTTPResponseBodyData(request, response, sizeof(response));
+		int responseLength = responseSize;
+		if (responseLength >= sizeof(response))
+		{
+			responseLength = sizeof(response) - 1;
+		}
+
+		if (SteamWorks_GetHTTPResponseBodyData(request, response, responseLength))
+		{
+			response[responseLength] = '\0';
+		}
+		else
+		{
+			response[0] = '\0';
+		}
 	}
 
-	LogError("[gokz-top-core] POST %s failed failure=%d request_successful=%d status=%d retries_remaining=%d response=%s",
-		path, failure, requestSuccessful, statusCode, retriesRemaining, response);
+	LogError("[gokz-top-core] %s %s failed failure=%d request_successful=%d status=%d retries_remaining=%d response=%s",
+		StrEqual(path, "/v1/servers/status") ? "PUT" : "POST",
+		path,
+		failure,
+		requestSuccessful,
+		statusCode,
+		retriesRemaining,
+		response);
 }
 
 void ApplyAuthHeaders(Handle request)

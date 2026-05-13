@@ -66,7 +66,20 @@ public void OnPublicIPHTTPComplete(Handle request, bool failure, bool requestSuc
 	int responseSize;
 	if (SteamWorks_GetHTTPResponseBodySize(request, responseSize) && responseSize > 0)
 	{
-		SteamWorks_GetHTTPResponseBodyData(request, response, sizeof(response));
+		int responseLength = responseSize;
+		if (responseLength >= sizeof(response))
+		{
+			responseLength = sizeof(response) - 1;
+		}
+
+		if (SteamWorks_GetHTTPResponseBodyData(request, response, responseLength))
+		{
+			response[responseLength] = '\0';
+		}
+		else
+		{
+			response[0] = '\0';
+		}
 	}
 
 	if (!failure
