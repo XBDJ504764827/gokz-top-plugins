@@ -1,0 +1,191 @@
+"Phrases"
+{
+	"Reviews Prompt"
+	{
+		"en"		"{grey}You finished the main course. Use {default}!rate{grey} to leave a gokz.top review for this map."
+		"ru"		"{grey}Вы прошли основной курс. Используйте {default}!rate{grey}, чтобы оставить отзыв о карте на gokz.top."
+		"chi"		"{grey}你已完成主路线。使用 {default}!rate{grey} 为这张地图在 gokz.top 上留下评价。"
+	}
+	"Reviews Summary - Header"
+	{
+		"#format"	"{1:s}"
+		"en"		"{grey}{1} review summary:"
+		"ru"		"{grey}Сводка отзывов для {1}:"
+		"chi"		"{grey}{1} 评价摘要："
+	}
+	"Reviews Summary - Overall"
+	{
+		"#format"	"{1:f},{2:s},{3:d}"
+		"en"		"{grey}Overall: {default}{1:.1f}{grey} {default}{2}{grey} ({default}{3}{grey} reviews)"
+		"ru"		"{grey}Общая оценка: {default}{1:.1f}{grey} {default}{2}{grey} ({default}{3}{grey} отзывов)"
+		"chi"		"{grey}综合评分：{default}{1:.1f}{grey} {default}{2}{grey}（{default}{3}{grey} 条评价）"
+	}
+	"Reviews Summary - Comments"
+	{
+		"#format"	"{1:d}"
+		"en"		"{grey}Comments: {default}{1}{grey}"
+		"ru"		"{grey}Комментариев: {default}{1}{grey}"
+		"chi"		"{grey}评论数：{default}{1}{grey}"
+	}
+	"Reviews Summary - None"
+	{
+		"#format"	"{1:s}"
+		"en"		"{grey}No gokz.top reviews yet for {default}{1}{grey}."
+		"ru"		"{grey}Для {default}{1}{grey} пока нет отзывов на gokz.top."
+		"chi"		"{grey}{default}{1}{grey} 暂时还没有 gokz.top 评价。"
+	}
+	"Reviews Menu - Overall"
+	{
+		"en"		"Overall"
+		"ru"		"Общая"
+		"chi"		"综合"
+	}
+	"Reviews Menu - Gameplay"
+	{
+		"en"		"Gameplay"
+		"ru"		"Геймплей"
+		"chi"		"玩法"
+	}
+	"Reviews Menu - Visuals"
+	{
+		"en"		"Visuals"
+		"ru"		"Визуал"
+		"chi"		"视觉"
+	}
+	"Reviews Menu - Comment"
+	{
+		"en"		"Write comment"
+		"ru"		"Написать комментарий"
+		"chi"		"撰写评论"
+	}
+	"Reviews Menu - ViewComments"
+	{
+		"en"		"View comments"
+		"ru"		"Смотреть комментарии"
+		"chi"		"查看评论"
+	}
+	"Reviews Menu - Submit"
+	{
+		"en"		"Submit review"
+		"ru"		"Отправить отзыв"
+		"chi"		"提交评价"
+	}
+	"Reviews Menu - AspectTitle"
+	{
+		"#format"	"{1:s}"
+		"en"		"Rate {1}"
+		"ru"		"Оценить: {1}"
+		"chi"		"评价 {1}"
+	}
+	"Reviews Comments - Title"
+	{
+		"#format"	"{1:s}"
+		"en"		"Recent comments for {1}"
+		"ru"		"Последние комментарии для {1}"
+		"chi"		"{1} 的最新评论"
+	}
+	"Reviews Comments - Empty"
+	{
+		"en"		"{grey}No review comments found for this map."
+		"ru"		"{grey}Для этой карты комментарии к отзывам не найдены."
+		"chi"		"{grey}这张地图暂时没有评价评论。"
+	}
+	"Reviews Comment - Prompt"
+	{
+		"en"		"{grey}Type your review comment in chat. It will be saved to gokz.top."
+		"ru"		"{grey}Введите комментарий к отзыву в чат. Он будет сохранён на gokz.top."
+		"chi"		"{grey}在聊天中输入你的评价评论。它将被保存到 gokz.top。"
+	}
+	"Reviews Comment - CancelHint"
+	{
+		"en"		"{grey}Type {default}!cancel{grey} or {default}/cancel{grey} to stop writing a comment."
+		"ru"		"{grey}Введите {default}!cancel{grey} или {default}/cancel{grey}, чтобы отменить ввод комментария."
+		"chi"		"{grey}输入 {default}!cancel{grey} 或 {default}/cancel{grey} 以取消撰写评论。"
+	}
+	"Reviews Comment - Cancelled"
+	{
+		"en"		"{grey}Review comment capture cancelled."
+		"ru"		"{grey}Ввод комментария к отзыву отменён."
+		"chi"		"{grey}已取消评价评论输入。"
+	}
+	"Reviews Comment - Saved"
+	{
+		"en"		"{grey}Your review has been {green}saved{grey}."
+		"ru"		"{grey}Ваш отзыв был {green}сохранён{grey}."
+		"chi"		"{grey}你的评价已{green}保存{grey}。"
+	}
+	"Reviews Submit - Saved"
+	{
+		"en"		"{grey}Your review has been {green}saved{grey}."
+		"ru"		"{grey}Ваш отзыв был {green}сохранён{grey}."
+		"chi"		"{grey}你的评价已{green}保存{grey}。"
+	}
+	"Reviews Command - Usage"
+	{
+		"en"		"{grey}Usage: {default}!rate{grey}, {default}!rate <1-5> [comment]{grey}, {default}!rate <1-5> <1-5> <1-5> [comment]{grey}, or {default}!rate <overall|gameplay|visuals> <1-5> [comment]{grey}."
+		"ru"		"{grey}Использование: {default}!rate{grey}, {default}!rate <1-5> [комментарий]{grey}, {default}!rate <1-5> <1-5> <1-5> [комментарий]{grey} или {default}!rate <overall|gameplay|visuals> <1-5> [комментарий]{grey}."
+		"chi"		"{grey}用法：{default}!rate{grey}、{default}!rate <1-5> [评论]{grey}、{default}!rate <1-5> <1-5> <1-5> [评论]{grey}，或 {default}!rate <overall|gameplay|visuals> <1-5> [评论]{grey}。"
+	}
+	"Reviews Command - AspectUsage"
+	{
+		"en"		"{grey}Usage: {default}!rate <overall|gameplay|visuals> <1-5> [comment]{grey}."
+		"ru"		"{grey}Использование: {default}!rate <overall|gameplay|visuals> <1-5> [комментарий]{grey}."
+		"chi"		"{grey}用法：{default}!rate <overall|gameplay|visuals> <1-5> [评论]{grey}。"
+	}
+	"Reviews Error - UnknownAspect"
+	{
+		"en"		"{grey}Unknown review aspect. Use {default}overall{grey}, {default}gameplay{grey}, or {default}visuals{grey}."
+		"ru"		"{grey}Неизвестный аспект отзыва. Используйте {default}overall{grey}, {default}gameplay{grey} или {default}visuals{grey}."
+		"chi"		"{grey}未知的评价维度。请使用 {default}overall{grey}、{default}gameplay{grey} 或 {default}visuals{grey}。"
+	}
+	"Reviews Error - RatingRange"
+	{
+		"en"		"{grey}Ratings must be between {default}1{grey} and {default}5{grey}."
+		"ru"		"{grey}Оценка должна быть от {default}1{grey} до {default}5{grey}."
+		"chi"		"{grey}评分必须在 {default}1{grey} 到 {default}5{grey} 之间。"
+	}
+	"Reviews Error - OverallRequired"
+	{
+		"en"		"{grey}An {default}overall{grey} rating is required before this review can be submitted."
+		"ru"		"{grey}Перед отправкой отзыва требуется оценка {default}overall{grey}."
+		"chi"		"{grey}提交评价前必须先填写 {default}overall{grey} 评分。"
+	}
+	"Reviews Error - MissingServerGroupKey"
+	{
+		"en"		"{grey}This server is missing {default}gokz_top_server_group_key{grey}, so reviews cannot be submitted."
+		"ru"		"{grey}На этом сервере отсутствует {default}gokz_top_server_group_key{grey}, поэтому отзывы нельзя отправить."
+		"chi"		"{grey}此服务器缺少 {default}gokz_top_server_group_key{grey}，因此无法提交评价。"
+	}
+	"Reviews Error - BaseUrlMissing"
+	{
+		"en"		"{grey}This server is missing {default}gokz_top_api_base_url{grey}."
+		"ru"		"{grey}На этом сервере отсутствует {default}gokz_top_api_base_url{grey}."
+		"chi"		"{grey}此服务器缺少 {default}gokz_top_api_base_url{grey}。"
+	}
+	"Reviews Error - RequestCreate"
+	{
+		"en"		"{grey}Failed to create the HTTP request for gokz.top."
+		"ru"		"{grey}Не удалось создать HTTP-запрос к gokz.top."
+		"chi"		"{grey}无法创建发送到 gokz.top 的 HTTP 请求。"
+	}
+	"Reviews Error - MapUnavailable"
+	{
+		"en"		"{grey}This map is not available on gokz.top, so the review could not be submitted."
+		"ru"		"{grey}Эта карта недоступна на gokz.top, поэтому отзыв нельзя отправить."
+		"chi"		"{grey}这张地图在 gokz.top 上不可用，因此无法提交评价。"
+	}
+	"Reviews Error - NonJson"
+	{
+		"#format"	"{1:d}"
+		"en"		"{grey}gokz.top returned a non-JSON response (status {default}{1}{grey}). Check the configured API base URL."
+		"ru"		"{grey}gokz.top вернул ответ не в формате JSON (статус {default}{1}{grey}). Проверьте настроенный API base URL."
+		"chi"		"{grey}gokz.top 返回了非 JSON 响应（状态 {default}{1}{grey}）。请检查配置的 API base URL。"
+	}
+	"Reviews Error - HttpGeneric"
+	{
+		"#format"	"{1:d}"
+		"en"		"{grey}gokz.top request failed with status {default}{1}{grey}."
+		"ru"		"{grey}Запрос к gokz.top завершился ошибкой со статусом {default}{1}{grey}."
+		"chi"		"{grey}gokz.top 请求失败，状态码为 {default}{1}{grey}。"
+	}
+}

@@ -91,10 +91,12 @@ jobs:
           cp -r ../addons .
           cd ./addons/sourcemod/scripting
           echo "#define GOKZ_VERSION \"${GOKZ_VERSION}\"" > include/gokz/version.inc
-          ./spcomp gokz-example.sp
+          for plugin in gokz-*.sp; do
+            ./spcomp "$plugin"
+          done
           cd ../../../../
           mkdir -p addons/sourcemod/plugins
-          mv sm/addons/sourcemod/scripting/gokz-example.smx addons/sourcemod/plugins/
+          mv sm/addons/sourcemod/scripting/*.smx addons/sourcemod/plugins/
 
       - name: package
         shell: bash
