@@ -17,6 +17,7 @@
 #define GOKZ_TOP_LANGUAGE_CODE_LENGTH 16
 #define GOKZ_TOP_SESSION_BODY_LENGTH 1024
 #define GOKZ_TOP_KICK_MESSAGE_LENGTH 512
+#define GOKZ_TOP_LANGUAGE_QUERY_FALLBACK 1.0
 
 public Plugin myinfo =
 {
@@ -29,10 +30,12 @@ public Plugin myinfo =
 
 bool gB_LateLoaded;
 bool gB_SessionActive[MAXPLAYERS + 1];
+bool gB_ConnectSent[MAXPLAYERS + 1];
 char gC_SessionID[MAXPLAYERS + 1][GOKZ_TOP_SESSION_ID_LENGTH];
 char gC_PlayerSteamID64[MAXPLAYERS + 1][GOKZ_TOP_STEAMID64_LENGTH];
 char gC_PlayerIP[MAXPLAYERS + 1][GOKZ_TOP_IP_LENGTH];
 char gC_ConnectedAt[MAXPLAYERS + 1][GOKZ_TOP_TIMESTAMP_LENGTH];
+char gC_ClientLanguage[MAXPLAYERS + 1][GOKZ_TOP_LANGUAGE_CODE_LENGTH];
 char gC_MapName[PLATFORM_MAX_PATH];
 Handle gH_HeartbeatTimer;
 
@@ -150,28 +153,42 @@ void StartSession(int client)
 	UUID_GenerateV7(gC_SessionID[client], sizeof(gC_SessionID[]));
 	GetClientIPv4(client, gC_PlayerIP[client], sizeof(gC_PlayerIP[]));
 	FormatLocalISOTime(gC_ConnectedAt[client], sizeof(gC_ConnectedAt[]));
+	GetClientLanguageCode(client, gC_ClientLanguage[client], sizeof(gC_ClientLanguage[]));
 
 	gB_SessionActive[client] = true;
+	gB_ConnectSent[client] = false;
 
-	SendConnectEvent(client);
+	if (QueryClientConVar(client, "cl_language", OnClientLanguageQueried) == QUERYCOOKIE_FAILED)
+	{
+		SendConnectEventOnce(client);
+		return;
+	}
+
+	CreateTimer(GOKZ_TOP_LANGUAGE_QUERY_FALLBACK, Timer_SendConnectFallback, GetClientUserId(client));
 }
 
 void EndSession(int client)
 {
-	char disconnectAt[GOKZ_TOP_TIMESTAMP_LENGTH];
-	FormatLocalISOTime(disconnectAt, sizeof(disconnectAt));
+	if (gB_ConnectSent[client])
+	{
+		char disconnectAt[GOKZ_TOP_TIMESTAMP_LENGTH];
+		FormatLocalISOTime(disconnectAt, sizeof(disconnectAt));
 
-	SendDisconnectEvent(client, disconnectAt);
+		SendDisconnectEvent(client, disconnectAt);
+	}
+
 	ClearSession(client);
 }
 
 void ClearSession(int client)
 {
 	gB_SessionActive[client] = false;
+	gB_ConnectSent[client] = false;
 	gC_SessionID[client][0] = '\0';
 	gC_PlayerSteamID64[client][0] = '\0';
 	gC_PlayerIP[client][0] = '\0';
 	gC_ConnectedAt[client][0] = '\0';
+	gC_ClientLanguage[client][0] = '\0';
 }
 
 public Action Timer_SendHeartbeats(Handle timer)
@@ -195,17 +212,51 @@ public Action Timer_SendHeartbeats(Handle timer)
 	return Plugin_Continue;
 }
 
+public void OnClientLanguageQueried(QueryCookie cookie, int client, ConVarQueryResult result, const char[] cvarName, const char[] cvarValue)
+{
+	if (!gB_SessionActive[client] || gB_ConnectSent[client])
+	{
+		return;
+	}
+
+	if (result == ConVarQuery_Okay)
+	{
+		NormalizeClientLanguage(cvarValue, gC_ClientLanguage[client], sizeof(gC_ClientLanguage[]));
+	}
+
+	SendConnectEventOnce(client);
+}
+
+public Action Timer_SendConnectFallback(Handle timer, any userid)
+{
+	int client = GetClientOfUserId(userid);
+	if (client != 0 && gB_SessionActive[client] && !gB_ConnectSent[client])
+	{
+		SendConnectEventOnce(client);
+	}
+
+	return Plugin_Stop;
+}
+
 
 
 // =====[ SESSION EVENTS ]=====
+
+void SendConnectEventOnce(int client)
+{
+	if (!gB_SessionActive[client] || gB_ConnectSent[client])
+	{
+		return;
+	}
+
+	gB_ConnectSent[client] = true;
+	SendConnectEvent(client);
+}
 
 void SendConnectEvent(int client)
 {
 	char mapName[PLATFORM_MAX_PATH * 2];
 	EscapeJSONString(gC_MapName, mapName, sizeof(mapName));
-
-	char clientLanguage[GOKZ_TOP_LANGUAGE_CODE_LENGTH];
-	GetClientLanguageCode(client, clientLanguage, sizeof(clientLanguage));
 
 	char payload[GOKZ_TOP_SESSION_BODY_LENGTH];
 	Format(payload, sizeof(payload),
@@ -215,7 +266,7 @@ void SendConnectEvent(int client)
 		gC_ConnectedAt[client],
 		gC_PlayerIP[client],
 		mapName,
-		clientLanguage);
+		gC_ClientLanguage[client]);
 
 	GOKZTop_PostSessionEvent("connect", payload);
 }
@@ -284,10 +335,11 @@ void HandleConnectResponse(const char[] responseBody)
 		FormatFallbackKickMessage(responseBody, kickMessage, sizeof(kickMessage));
 	}
 
-	LogMessage("[gokz-top-players] Kicking banned player client=%d steamid64=%s session_id=%s",
+	LogMessage("[gokz-top-players] Kicking banned player client=%d steamid64=%s session_id=%s client_language=%s",
 		client,
 		gC_PlayerSteamID64[client],
-		gC_SessionID[client]);
+		gC_SessionID[client],
+		gC_ClientLanguage[client]);
 	ClearSession(client);
 	KickClient(client, "%s", kickMessage);
 }
@@ -363,10 +415,43 @@ void GetClientLanguageCode(int client, char[] buffer, int maxLength)
 	}
 
 	GetLanguageInfo(language, buffer, maxLength);
+	NormalizeClientLanguage(buffer, buffer, maxLength);
 	if (buffer[0] == '\0')
 	{
 		strcopy(buffer, maxLength, "en");
 	}
+}
+
+void NormalizeClientLanguage(const char[] input, char[] buffer, int maxLength)
+{
+	if (StrEqual(input, "chi", false)
+		|| StrEqual(input, "zh", false)
+		|| StrEqual(input, "zho", false)
+		|| StrEqual(input, "schinese", false)
+		|| StrEqual(input, "tchinese", false)
+		|| StrEqual(input, "chinese", false))
+	{
+		strcopy(buffer, maxLength, "chi");
+		return;
+	}
+
+	if (StrEqual(input, "ru", false)
+		|| StrEqual(input, "rus", false)
+		|| StrEqual(input, "russian", false))
+	{
+		strcopy(buffer, maxLength, "ru");
+		return;
+	}
+
+	if (StrEqual(input, "en", false)
+		|| StrEqual(input, "eng", false)
+		|| StrEqual(input, "english", false))
+	{
+		strcopy(buffer, maxLength, "en");
+		return;
+	}
+
+	strcopy(buffer, maxLength, input);
 }
 
 void FormatLocalISOTime(char[] buffer, int maxLength)
