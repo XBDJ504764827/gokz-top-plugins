@@ -323,6 +323,13 @@ void HandleConnectResponse(const char[] responseBody)
 		return;
 	}
 
+	char banType[64];
+	if (!ExtractJsonString(responseBody, "ban_type", banType, sizeof(banType)) || banType[0] == '\0')
+	{
+		LogError("[gokz-top-players] Refusing to kick: ban enforcement response missing ban_type");
+		return;
+	}
+
 	int client = FindClientBySessionID(sessionID);
 	if (client == 0 || !IsClientInGame(client))
 	{
@@ -332,7 +339,7 @@ void HandleConnectResponse(const char[] responseBody)
 	char kickMessage[GOKZ_TOP_KICK_MESSAGE_LENGTH];
 	if (!ExtractJsonString(responseBody, "kick_message", kickMessage, sizeof(kickMessage)))
 	{
-		FormatFallbackKickMessage(responseBody, kickMessage, sizeof(kickMessage));
+		FormatFallbackKickMessage(responseBody, banType, kickMessage, sizeof(kickMessage));
 	}
 
 	LogMessage("[gokz-top-players] Kicking banned player client=%d steamid64=%s session_id=%s client_language=%s",
@@ -357,17 +364,10 @@ int FindClientBySessionID(const char[] sessionID)
 	return 0;
 }
 
-void FormatFallbackKickMessage(const char[] responseBody, char[] kickMessage, int maxLength)
+void FormatFallbackKickMessage(const char[] responseBody, const char[] banType, char[] kickMessage, int maxLength)
 {
-	char banType[64];
 	char detailURL[256];
-	ExtractJsonString(responseBody, "ban_type", banType, sizeof(banType));
 	ExtractJsonString(responseBody, "detail_url", detailURL, sizeof(detailURL));
-
-	if (banType[0] == '\0')
-	{
-		strcopy(banType, sizeof(banType), "active");
-	}
 
 	if (detailURL[0] == '\0')
 	{
