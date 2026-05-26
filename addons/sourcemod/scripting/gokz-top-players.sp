@@ -110,6 +110,16 @@ public void OnClientPostAdminCheck(int client)
 	StartSession(client);
 }
 
+public void OnClientPutInServer(int client)
+{
+	if (!IsClientReadyForSession(client))
+	{
+		return;
+	}
+
+	StartSession(client);
+}
+
 public void OnClientDisconnect(int client)
 {
 	if (!gB_SessionActive[client])
@@ -269,6 +279,10 @@ void HandleConnectResponse(const char[] responseBody)
 		FormatFallbackKickMessage(responseBody, kickMessage, sizeof(kickMessage));
 	}
 
+	LogMessage("[gokz-top-players] Kicking banned player client=%d steamid64=%s session_id=%s",
+		client,
+		gC_PlayerSteamID64[client],
+		gC_SessionID[client]);
 	ClearSession(client);
 	KickClient(client, "%s", kickMessage);
 }
@@ -277,7 +291,7 @@ int FindClientBySessionID(const char[] sessionID)
 {
 	for (int client = 1; client <= MaxClients; client++)
 	{
-		if (gB_SessionActive[client] && StrEqual(gC_SessionID[client], sessionID))
+		if (gB_SessionActive[client] && StrEqual(gC_SessionID[client], sessionID, false))
 		{
 			return client;
 		}
@@ -443,7 +457,7 @@ bool ExtractJsonString(const char[] json, const char[] key, char[] out, int maxL
 
 	pos++;
 	int outPos = 0;
-	while (json[pos] != '\0' && outPos < maxLength - 1)
+	while (json[pos] != '\0')
 	{
 		char c = json[pos++];
 		if (c == '"')
@@ -457,7 +471,10 @@ bool ExtractJsonString(const char[] json, const char[] key, char[] out, int maxL
 			c = json[pos++];
 		}
 
-		out[outPos++] = c;
+		if (outPos < maxLength - 1)
+		{
+			out[outPos++] = c;
+		}
 	}
 
 	out[outPos] = '\0';
