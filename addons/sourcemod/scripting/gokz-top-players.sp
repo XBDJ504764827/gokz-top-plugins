@@ -14,6 +14,7 @@
 #define GOKZ_TOP_TIMESTAMP_LENGTH 32
 #define GOKZ_TOP_STEAMID64_LENGTH 32
 #define GOKZ_TOP_IP_LENGTH 64
+#define GOKZ_TOP_LANGUAGE_CODE_LENGTH 16
 #define GOKZ_TOP_SESSION_BODY_LENGTH 1024
 #define GOKZ_TOP_KICK_MESSAGE_LENGTH 512
 
@@ -203,14 +204,18 @@ void SendConnectEvent(int client)
 	char mapName[PLATFORM_MAX_PATH * 2];
 	EscapeJSONString(gC_MapName, mapName, sizeof(mapName));
 
+	char clientLanguage[GOKZ_TOP_LANGUAGE_CODE_LENGTH];
+	GetClientLanguageCode(client, clientLanguage, sizeof(clientLanguage));
+
 	char payload[GOKZ_TOP_SESSION_BODY_LENGTH];
 	Format(payload, sizeof(payload),
-		"{\"session_id\":\"%s\",\"player_steamid64\":\"%s\",\"connected_at\":\"%s\",\"ip_address\":\"%s\",\"map_name\":\"%s\"}",
+		"{\"session_id\":\"%s\",\"player_steamid64\":\"%s\",\"connected_at\":\"%s\",\"ip_address\":\"%s\",\"map_name\":\"%s\",\"client_language\":\"%s\"}",
 		gC_SessionID[client],
 		gC_PlayerSteamID64[client],
 		gC_ConnectedAt[client],
 		gC_PlayerIP[client],
-		mapName);
+		mapName,
+		clientLanguage);
 
 	GOKZTop_PostSessionEvent("connect", payload);
 }
@@ -348,6 +353,22 @@ void GetClientIPv4(int client, char[] buffer, int maxLength)
 	}
 }
 
+void GetClientLanguageCode(int client, char[] buffer, int maxLength)
+{
+	int language = GetClientLanguage(client);
+	if (language < 0)
+	{
+		strcopy(buffer, maxLength, "en");
+		return;
+	}
+
+	GetLanguageInfo(language, buffer, maxLength);
+	if (buffer[0] == '\0')
+	{
+		strcopy(buffer, maxLength, "en");
+	}
+}
+
 void FormatLocalISOTime(char[] buffer, int maxLength)
 {
 	char raw[GOKZ_TOP_TIMESTAMP_LENGTH];
@@ -469,6 +490,18 @@ bool ExtractJsonString(const char[] json, const char[] key, char[] out, int maxL
 		if (c == '\\' && json[pos] != '\0')
 		{
 			c = json[pos++];
+			if (c == 'n')
+			{
+				c = '\n';
+			}
+			else if (c == 'r')
+			{
+				c = '\r';
+			}
+			else if (c == 't')
+			{
+				c = '\t';
+			}
 		}
 
 		if (outPos < maxLength - 1)
