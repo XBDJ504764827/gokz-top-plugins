@@ -186,6 +186,10 @@ enum
 	ProfileTagType_Rank = 0,
 	ProfileTagType_Admin,
 	ProfileTagType_VIP,
+	ProfileTagType_GlobalRank,
+	ProfileTagType_RegionalRank,
+	ProfileTagType_Rating,
+	ProfileTagType_SteamGroup,
 	PROFILETAGTYPE_COUNT
 };
 
@@ -224,7 +228,11 @@ stock char gC_ProfileTagTypePhrases[PROFILETAGTYPE_COUNT][] =
 {
 	"Options Menu - Tag Rank",
 	"Options Menu - Tag Admin",
-	"Options Menu - Tag VIP"
+	"Options Menu - Tag VIP",
+	"Options Menu - Tag Global Rank",
+	"Options Menu - Tag Regional Rank",
+	"Options Menu - Tag Rating",
+	"Options Menu - Tag Steam Group"
 };
 
 stock int gI_ProfileOptionCounts[PROFILEOPTION_COUNT] = 
@@ -275,7 +283,7 @@ native int GOKZ_PF_GetRank(int client, int mode);
 public SharedPlugin __pl_gokz_profile = 
 {
 	name = "gokz-profile", 
-	file = "gokz-profile.smx", 
+	file = "gokz-top-profile.smx", 
 	#if defined REQUIRE_PLUGIN
 	required = 1, 
 	#else

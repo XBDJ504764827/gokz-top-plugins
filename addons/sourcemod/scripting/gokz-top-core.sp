@@ -34,6 +34,14 @@ ConVar gCV_Debug;
 char gC_RequestPathBuffer[GOKZ_TOP_MAX_PATH_LENGTH];
 char gC_RequestBodyBuffer[GOKZ_TOP_MAX_BODY_LENGTH];
 char gC_RequestURLBuffer[GOKZ_TOP_MAX_URL_LENGTH];
+GOKZTopLeaderboardDataState gI_LeaderboardState[MAXPLAYERS + 1][GOKZTOP_MODE_COUNT];
+float gF_LeaderboardRating[MAXPLAYERS + 1][GOKZTOP_MODE_COUNT];
+int gI_LeaderboardRank[MAXPLAYERS + 1][GOKZTOP_MODE_COUNT];
+int gI_LeaderboardGlobalRank[MAXPLAYERS + 1][GOKZTOP_MODE_COUNT];
+int gI_LeaderboardRegionalRank[MAXPLAYERS + 1][GOKZTOP_MODE_COUNT];
+int gI_LeaderboardPoints[MAXPLAYERS + 1][GOKZTOP_MODE_COUNT];
+char gC_LeaderboardRegion[MAXPLAYERS + 1][GOKZTOP_MODE_COUNT][8];
+GlobalForward gH_OnLeaderboardDataFetched;
 
 
 
@@ -43,6 +51,18 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int errMax)
 {
 	CreateNative("GOKZTop_PostJSON", Native_PostJSON);
 	CreateNative("GOKZTop_PostSessionEvent", Native_PostSessionEvent);
+	CreateNative("GOKZTop_RefreshLeaderboardData", Native_RefreshLeaderboardData);
+	CreateNative("GOKZTop_GetLeaderboardDataState", Native_GetLeaderboardDataState);
+	CreateNative("GOKZTop_IsLeaderboardDataLoaded", Native_IsLeaderboardDataLoaded);
+	CreateNative("GOKZTop_IsLeaderboardDataPending", Native_IsLeaderboardDataPending);
+	CreateNative("GOKZTop_HasLeaderboardDataError", Native_HasLeaderboardDataError);
+	CreateNative("GOKZTop_GetRating", Native_GetRating);
+	CreateNative("GOKZTop_GetRank", Native_GetRank);
+	CreateNative("GOKZTop_GetGlobalRank", Native_GetGlobalRank);
+	CreateNative("GOKZTop_HasRegionalRank", Native_HasRegionalRank);
+	CreateNative("GOKZTop_GetRegionalRank", Native_GetRegionalRank);
+	CreateNative("GOKZTop_GetRegionCode", Native_GetRegionCode);
+	CreateNative("GOKZTop_GetPoints", Native_GetPoints);
 	RegPluginLibrary("gokz-top-core");
 
 	return APLRes_Success;
@@ -70,6 +90,22 @@ public void OnPluginStart()
 
 	AutoExecConfig_ExecuteFile();
 	AutoExecConfig_CleanFile();
+
+	gH_OnLeaderboardDataFetched = new GlobalForward(
+		"GOKZTop_OnLeaderboardDataFetched",
+		ET_Ignore,
+		Param_Cell,
+		Param_Cell,
+		Param_Float,
+		Param_Cell,
+		Param_Cell,
+		Param_Cell,
+		Param_String);
+}
+
+public void OnClientConnected(int client)
+{
+	ClearClientLeaderboardCache(client);
 }
 
 
@@ -108,6 +144,110 @@ public int Native_PostSessionEvent(Handle plugin, int numParams)
 	GetNativeString(2, gC_RequestBodyBuffer, sizeof(gC_RequestBodyBuffer));
 
 	return PostSessionEvent(gC_RequestPathBuffer, gC_RequestBodyBuffer);
+}
+
+public int Native_RefreshLeaderboardData(Handle plugin, int numParams)
+{
+	return RefreshLeaderboardData(GetNativeCell(1), GetNativeCell(2));
+}
+
+public int Native_GetLeaderboardDataState(Handle plugin, int numParams)
+{
+	int client = GetNativeCell(1);
+	int mode = NormalizeMode(GetNativeCell(2));
+	if (!IsValidLeaderboardCacheSlot(client, mode))
+	{
+		return view_as<int>(GOKZTopLeaderboardData_Error);
+	}
+
+	return view_as<int>(gI_LeaderboardState[client][mode]);
+}
+
+public int Native_IsLeaderboardDataLoaded(Handle plugin, int numParams)
+{
+	int client = GetNativeCell(1);
+	int mode = NormalizeMode(GetNativeCell(2));
+	return IsValidLeaderboardCacheSlot(client, mode)
+		&& gI_LeaderboardState[client][mode] == GOKZTopLeaderboardData_Loaded;
+}
+
+public int Native_IsLeaderboardDataPending(Handle plugin, int numParams)
+{
+	int client = GetNativeCell(1);
+	int mode = NormalizeMode(GetNativeCell(2));
+	return IsValidLeaderboardCacheSlot(client, mode)
+		&& gI_LeaderboardState[client][mode] == GOKZTopLeaderboardData_Pending;
+}
+
+public int Native_HasLeaderboardDataError(Handle plugin, int numParams)
+{
+	int client = GetNativeCell(1);
+	int mode = NormalizeMode(GetNativeCell(2));
+	return IsValidLeaderboardCacheSlot(client, mode)
+		&& gI_LeaderboardState[client][mode] == GOKZTopLeaderboardData_Error;
+}
+
+public int Native_GetRating(Handle plugin, int numParams)
+{
+	int client = GetNativeCell(1);
+	int mode = NormalizeMode(GetNativeCell(2));
+	if (!IsValidLeaderboardCacheSlot(client, mode))
+	{
+		return view_as<int>(0.0);
+	}
+
+	return view_as<int>(gF_LeaderboardRating[client][mode]);
+}
+
+public int Native_GetRank(Handle plugin, int numParams)
+{
+	int client = GetNativeCell(1);
+	int mode = NormalizeMode(GetNativeCell(2));
+	return IsValidLeaderboardCacheSlot(client, mode) ? gI_LeaderboardRank[client][mode] : 0;
+}
+
+public int Native_GetGlobalRank(Handle plugin, int numParams)
+{
+	int client = GetNativeCell(1);
+	int mode = NormalizeMode(GetNativeCell(2));
+	return IsValidLeaderboardCacheSlot(client, mode) ? gI_LeaderboardGlobalRank[client][mode] : 0;
+}
+
+public int Native_HasRegionalRank(Handle plugin, int numParams)
+{
+	int client = GetNativeCell(1);
+	int mode = NormalizeMode(GetNativeCell(2));
+	return IsValidLeaderboardCacheSlot(client, mode) && gI_LeaderboardRegionalRank[client][mode] > 0;
+}
+
+public int Native_GetRegionalRank(Handle plugin, int numParams)
+{
+	int client = GetNativeCell(1);
+	int mode = NormalizeMode(GetNativeCell(2));
+	return IsValidLeaderboardCacheSlot(client, mode) ? gI_LeaderboardRegionalRank[client][mode] : 0;
+}
+
+public int Native_GetRegionCode(Handle plugin, int numParams)
+{
+	int client = GetNativeCell(1);
+	int mode = NormalizeMode(GetNativeCell(2));
+	int maxLength = GetNativeCell(4);
+
+	if (!IsValidLeaderboardCacheSlot(client, mode))
+	{
+		SetNativeString(3, "", maxLength);
+		return 0;
+	}
+
+	SetNativeString(3, gC_LeaderboardRegion[client][mode], maxLength);
+	return 0;
+}
+
+public int Native_GetPoints(Handle plugin, int numParams)
+{
+	int client = GetNativeCell(1);
+	int mode = NormalizeMode(GetNativeCell(2));
+	return IsValidLeaderboardCacheSlot(client, mode) ? gI_LeaderboardPoints[client][mode] : 0;
 }
 
 
@@ -158,6 +298,300 @@ bool HasServerGroupKey()
 	char serverGroupKey[4];
 	gCV_ServerGroupKey.GetString(serverGroupKey, sizeof(serverGroupKey));
 	return serverGroupKey[0] != '\0';
+}
+
+
+
+// =====[ LEADERBOARD PROFILE CACHE ]=====
+
+bool RefreshLeaderboardData(int client, int mode)
+{
+	mode = NormalizeMode(mode);
+	if (!IsValidLeaderboardCacheSlot(client, mode)
+		|| !IsClientInGame(client)
+		|| IsFakeClient(client))
+	{
+		return false;
+	}
+
+	if (gI_LeaderboardState[client][mode] == GOKZTopLeaderboardData_Pending)
+	{
+		return true;
+	}
+
+	char steamID64[32];
+	if (!GetClientAuthId(client, AuthId_SteamID64, steamID64, sizeof(steamID64), true))
+	{
+		gI_LeaderboardState[client][mode] = GOKZTopLeaderboardData_Error;
+		return false;
+	}
+
+	gI_LeaderboardState[client][mode] = GOKZTopLeaderboardData_Pending;
+
+	DataPack pack = CreateLeaderboardRequestPack(GetClientUserId(client), mode, gCV_RetryCount.IntValue);
+	return SendLeaderboardRequestFromPack(pack);
+}
+
+DataPack CreateLeaderboardRequestPack(int userID, int mode, int retriesRemaining)
+{
+	DataPack pack = new DataPack();
+	pack.WriteCell(userID);
+	pack.WriteCell(mode);
+	pack.WriteCell(retriesRemaining);
+	return pack;
+}
+
+bool SendLeaderboardRequestFromPack(DataPack pack)
+{
+	int userID;
+	int mode;
+	int retriesRemaining;
+	ReadLeaderboardRequestPack(pack, userID, mode, retriesRemaining);
+
+	int client = GetClientOfUserId(userID);
+	if (!IsValidLeaderboardCacheSlot(client, mode)
+		|| !IsClientInGame(client)
+		|| IsFakeClient(client))
+	{
+		delete pack;
+		return false;
+	}
+
+	char steamID64[32];
+	if (!GetClientAuthId(client, AuthId_SteamID64, steamID64, sizeof(steamID64), true))
+	{
+		gI_LeaderboardState[client][mode] = GOKZTopLeaderboardData_Error;
+		delete pack;
+		return false;
+	}
+
+	char scope[8];
+	GetLeaderboardScopeForMode(mode, scope, sizeof(scope));
+
+	char path[160];
+	Format(path, sizeof(path), "/v1/leaderboards/players/%s?scope=%s", steamID64, scope);
+	if (!BuildAPIURL(path, gC_RequestURLBuffer, sizeof(gC_RequestURLBuffer)))
+	{
+		gI_LeaderboardState[client][mode] = GOKZTopLeaderboardData_Error;
+		delete pack;
+		return false;
+	}
+
+	Handle request = SteamWorks_CreateHTTPRequest(k_EHTTPMethodGET, gC_RequestURLBuffer);
+	if (request == null)
+	{
+		LogError("[gokz-top-core] Failed to create leaderboard request for client=%d mode=%d", client, mode);
+		RetryLeaderboardOrDelete(userID, mode, retriesRemaining, "create-request");
+		delete pack;
+		return false;
+	}
+
+	SteamWorks_SetHTTPRequestContextValue(request, pack);
+	SteamWorks_SetHTTPCallbacks(request, OnLeaderboardHTTPComplete);
+	SteamWorks_SetHTTPRequestHeaderValue(request, "Accept", "application/json");
+	SteamWorks_SetHTTPRequestHeaderValue(request, "X-Request-Origin", "gokz-top-core/" ... GOKZ_TOP_VERSION);
+	SteamWorks_SetHTTPRequestHeaderValue(request, "User-Agent", GOKZ_TOP_USER_AGENT);
+	SteamWorks_SetHTTPRequestUserAgentInfo(request, GOKZ_TOP_USER_AGENT);
+	SteamWorks_SetHTTPRequestAbsoluteTimeoutMS(request, gCV_RequestTimeout.IntValue * 1000);
+
+	if (gCV_Debug.BoolValue)
+	{
+		LogMessage("[gokz-top-core] GET %s retries_remaining=%d", path, retriesRemaining);
+	}
+
+	if (!SteamWorks_SendHTTPRequest(request))
+	{
+		LogError("[gokz-top-core] Failed to send leaderboard request client=%d mode=%d", client, mode);
+		RetryLeaderboardOrDelete(userID, mode, retriesRemaining, "send-request");
+		delete pack;
+		delete request;
+		return false;
+	}
+
+	return true;
+}
+
+public void OnLeaderboardHTTPComplete(Handle request, bool failure, bool requestSuccessful, EHTTPStatusCode statusCode, DataPack pack)
+{
+	int userID;
+	int mode;
+	int retriesRemaining;
+	ReadLeaderboardRequestPack(pack, userID, mode, retriesRemaining);
+
+	int client = GetClientOfUserId(userID);
+	if (!IsValidLeaderboardCacheSlot(client, mode)
+		|| !IsClientInGame(client)
+		|| IsFakeClient(client))
+	{
+		delete pack;
+		delete request;
+		return;
+	}
+
+	if (!IsHTTPResponseOK(failure, requestSuccessful, statusCode))
+	{
+		if (ShouldRetryHTTPFailure(failure, requestSuccessful, statusCode))
+		{
+			RetryLeaderboardOrDelete(userID, mode, retriesRemaining, "http-complete");
+		}
+		else
+		{
+			gI_LeaderboardState[client][mode] = GOKZTopLeaderboardData_Error;
+			LogError("[gokz-top-core] Leaderboard request failed client=%d mode=%d status=%d", client, mode, statusCode);
+		}
+
+		delete pack;
+		delete request;
+		return;
+	}
+
+	char body[GOKZ_TOP_MAX_BODY_LENGTH];
+	if (!ReadHTTPResponseBody(request, body, sizeof(body)) || !ParseLeaderboardResponse(client, mode, body))
+	{
+		gI_LeaderboardState[client][mode] = GOKZTopLeaderboardData_Error;
+		LogError("[gokz-top-core] Failed to parse leaderboard response client=%d mode=%d", client, mode);
+		delete pack;
+		delete request;
+		return;
+	}
+
+	gI_LeaderboardState[client][mode] = GOKZTopLeaderboardData_Loaded;
+	Call_OnLeaderboardDataFetched(client, mode);
+
+	delete pack;
+	delete request;
+}
+
+public Action Timer_RetryLeaderboardRequest(Handle timer, DataPack pack)
+{
+	SendLeaderboardRequestFromPack(pack);
+	return Plugin_Stop;
+}
+
+void ReadLeaderboardRequestPack(DataPack pack, int &userID, int &mode, int &retriesRemaining)
+{
+	pack.Reset();
+	userID = pack.ReadCell();
+	mode = pack.ReadCell();
+	retriesRemaining = pack.ReadCell();
+}
+
+void RetryLeaderboardOrDelete(int userID, int mode, int retriesRemaining, const char[] reason)
+{
+	int client = GetClientOfUserId(userID);
+	if (retriesRemaining <= 0)
+	{
+		if (IsValidLeaderboardCacheSlot(client, mode))
+		{
+			gI_LeaderboardState[client][mode] = GOKZTopLeaderboardData_Error;
+		}
+		LogError("[gokz-top-core] Dropping leaderboard request userid=%d mode=%d reason=%s", userID, mode, reason);
+		return;
+	}
+
+	DataPack retryPack = CreateLeaderboardRequestPack(userID, mode, retriesRemaining - 1);
+	CreateTimer(gCV_RetryDelay.FloatValue, Timer_RetryLeaderboardRequest, retryPack);
+
+	if (gCV_Debug.BoolValue)
+	{
+		LogMessage("[gokz-top-core] Queued leaderboard retry userid=%d mode=%d retries_remaining=%d reason=%s",
+			userID, mode, retriesRemaining - 1, reason);
+	}
+}
+
+bool ParseLeaderboardResponse(int client, int mode, const char[] body)
+{
+	float rating;
+	int rank;
+	int globalRank;
+	int regionalRank;
+	int points;
+	char region[8];
+
+	ExtractJsonFloat(body, "rating", rating);
+	ExtractJsonInt(body, "rank", rank);
+	ExtractJsonInt(body, "global_rank", globalRank);
+	ExtractJsonInt(body, "rank_regional", regionalRank);
+	ExtractJsonInt(body, "points", points);
+	ExtractJsonString(body, "region", region, sizeof(region));
+
+	gF_LeaderboardRating[client][mode] = rating;
+	gI_LeaderboardRank[client][mode] = rank;
+	gI_LeaderboardGlobalRank[client][mode] = globalRank;
+	gI_LeaderboardRegionalRank[client][mode] = regionalRank;
+	gI_LeaderboardPoints[client][mode] = points;
+	strcopy(gC_LeaderboardRegion[client][mode], sizeof(gC_LeaderboardRegion[][]), region);
+	return true;
+}
+
+void Call_OnLeaderboardDataFetched(int client, int mode)
+{
+	Call_StartForward(gH_OnLeaderboardDataFetched);
+	Call_PushCell(client);
+	Call_PushCell(mode);
+	Call_PushFloat(gF_LeaderboardRating[client][mode]);
+	Call_PushCell(gI_LeaderboardRank[client][mode]);
+	Call_PushCell(gI_LeaderboardRegionalRank[client][mode]);
+	Call_PushCell(gI_LeaderboardRegionalRank[client][mode] > 0);
+	Call_PushString(gC_LeaderboardRegion[client][mode]);
+	Call_Finish();
+}
+
+void ClearClientLeaderboardCache(int client)
+{
+	if (client <= 0 || client > MaxClients)
+	{
+		return;
+	}
+
+	for (int mode = 0; mode < GOKZTOP_MODE_COUNT; mode++)
+	{
+		gI_LeaderboardState[client][mode] = GOKZTopLeaderboardData_NotLoaded;
+		gF_LeaderboardRating[client][mode] = 0.0;
+		gI_LeaderboardRank[client][mode] = 0;
+		gI_LeaderboardGlobalRank[client][mode] = 0;
+		gI_LeaderboardRegionalRank[client][mode] = 0;
+		gI_LeaderboardPoints[client][mode] = 0;
+		gC_LeaderboardRegion[client][mode][0] = '\0';
+	}
+}
+
+bool IsValidLeaderboardCacheSlot(int client, int mode)
+{
+	return client > 0 && client <= MaxClients && mode >= 0 && mode < GOKZTOP_MODE_COUNT;
+}
+
+int NormalizeMode(int mode)
+{
+	if (mode >= 0 && mode < GOKZTOP_MODE_COUNT)
+	{
+		return mode;
+	}
+
+	return -1;
+}
+
+void GetLeaderboardScopeForMode(int mode, char[] scope, int maxLength)
+{
+	switch (mode)
+	{
+		case GOKZTOP_MODE_VNL:
+		{
+			strcopy(scope, maxLength, "VNL");
+		}
+		case GOKZTOP_MODE_SKZ:
+		{
+			strcopy(scope, maxLength, "SKZ");
+		}
+		case GOKZTOP_MODE_OVR:
+		{
+			strcopy(scope, maxLength, "OVR");
+		}
+		default:
+		{
+			strcopy(scope, maxLength, "KZT");
+		}
+	}
 }
 
 
@@ -404,8 +838,182 @@ bool BuildAPIURL(const char[] path, char[] url, int maxLength)
 	if (length > 0 && baseURL[length - 1] == '/')
 	{
 		baseURL[length - 1] = '\0';
+		length--;
 	}
 
-	Format(url, maxLength, "%s%s", baseURL, path);
+	char suffix[GOKZ_TOP_MAX_PATH_LENGTH];
+	strcopy(suffix, sizeof(suffix), path);
+	if (StrContains(path, "/v1/", false) == 0
+		&& (EndsWith(baseURL, "/v1") || EndsWith(baseURL, "/api/v1")))
+	{
+		strcopy(suffix, sizeof(suffix), path[3]);
+	}
+
+	Format(url, maxLength, "%s%s", baseURL, suffix);
 	return true;
+}
+
+bool EndsWith(const char[] value, const char[] suffix)
+{
+	int valueLength = strlen(value);
+	int suffixLength = strlen(suffix);
+	if (suffixLength > valueLength)
+	{
+		return false;
+	}
+
+	return StrEqual(value[valueLength - suffixLength], suffix, false);
+}
+
+bool ReadHTTPResponseBody(Handle request, char[] out, int maxLength)
+{
+	out[0] = '\0';
+
+	int size;
+	if (!SteamWorks_GetHTTPResponseBodySize(request, size) || size <= 0)
+	{
+		return false;
+	}
+
+	if (size >= maxLength)
+	{
+		size = maxLength - 1;
+	}
+
+	bool ok = SteamWorks_GetHTTPResponseBodyData(request, out, size);
+	out[size] = '\0';
+	return ok;
+}
+
+bool FindJsonValueStart(const char[] json, const char[] key, int &pos)
+{
+	char pattern[64];
+	Format(pattern, sizeof(pattern), "\"%s\"", key);
+
+	int keyPos = StrContains(json, pattern, false);
+	if (keyPos == -1)
+	{
+		return false;
+	}
+
+	pos = keyPos + strlen(pattern);
+	while (json[pos] != '\0' && json[pos] != ':')
+	{
+		pos++;
+	}
+
+	if (json[pos] != ':')
+	{
+		return false;
+	}
+
+	pos++;
+	while (json[pos] == ' ' || json[pos] == '\t' || json[pos] == '\r' || json[pos] == '\n')
+	{
+		pos++;
+	}
+
+	return json[pos] != '\0';
+}
+
+bool ExtractJsonInt(const char[] json, const char[] key, int &value)
+{
+	value = 0;
+
+	int pos;
+	if (!FindJsonValueStart(json, key, pos)
+		|| StrContains(json[pos], "null", false) == 0)
+	{
+		return false;
+	}
+
+	char buffer[32];
+	int outPos;
+	while (json[pos] != '\0' && outPos < sizeof(buffer) - 1)
+	{
+		char c = json[pos];
+		if ((c < '0' || c > '9') && c != '-')
+		{
+			break;
+		}
+		buffer[outPos++] = c;
+		pos++;
+	}
+	buffer[outPos] = '\0';
+
+	if (outPos == 0)
+	{
+		return false;
+	}
+
+	value = StringToInt(buffer);
+	return true;
+}
+
+bool ExtractJsonFloat(const char[] json, const char[] key, float &value)
+{
+	value = 0.0;
+
+	int pos;
+	if (!FindJsonValueStart(json, key, pos)
+		|| StrContains(json[pos], "null", false) == 0)
+	{
+		return false;
+	}
+
+	char buffer[32];
+	int outPos;
+	while (json[pos] != '\0' && outPos < sizeof(buffer) - 1)
+	{
+		char c = json[pos];
+		if ((c < '0' || c > '9') && c != '-' && c != '.')
+		{
+			break;
+		}
+		buffer[outPos++] = c;
+		pos++;
+	}
+	buffer[outPos] = '\0';
+
+	if (outPos == 0)
+	{
+		return false;
+	}
+
+	value = StringToFloat(buffer);
+	return true;
+}
+
+bool ExtractJsonString(const char[] json, const char[] key, char[] out, int maxLength)
+{
+	out[0] = '\0';
+
+	int pos;
+	if (!FindJsonValueStart(json, key, pos)
+		|| json[pos] != '"')
+	{
+		return false;
+	}
+
+	pos++;
+	int outPos;
+	while (json[pos] != '\0' && outPos < maxLength - 1)
+	{
+		char c = json[pos++];
+		if (c == '"')
+		{
+			out[outPos] = '\0';
+			return true;
+		}
+
+		if (c == '\\' && json[pos] != '\0')
+		{
+			c = json[pos++];
+		}
+
+		out[outPos++] = c;
+	}
+
+	out[outPos] = '\0';
+	return false;
 }
