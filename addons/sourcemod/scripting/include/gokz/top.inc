@@ -123,6 +123,14 @@ forward void GOKZTop_OnLeaderboardDataFetched(
 	bool hasRegionalRank,
 	const char[] regionCode);
 
+/**
+ * Called after a player-session event request completes successfully.
+ *
+ * @param event			Session event name: "connect", "heartbeat", or "disconnect".
+ * @param responseBody	JSON response body returned by the API, or empty.
+ */
+forward void GOKZTop_OnSessionEventPosted(const char[] event, const char[] responseBody);
+
 public SharedPlugin __pl_gokz_top_core =
 {
 	name = "gokz-top-core",

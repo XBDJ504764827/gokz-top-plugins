@@ -42,6 +42,7 @@ int gI_LeaderboardRegionalRank[MAXPLAYERS + 1][GOKZTOP_MODE_COUNT];
 int gI_LeaderboardPoints[MAXPLAYERS + 1][GOKZTOP_MODE_COUNT];
 char gC_LeaderboardRegion[MAXPLAYERS + 1][GOKZTOP_MODE_COUNT][8];
 GlobalForward gH_OnLeaderboardDataFetched;
+GlobalForward gH_OnSessionEventPosted;
 
 
 
@@ -100,6 +101,11 @@ public void OnPluginStart()
 		Param_Cell,
 		Param_Cell,
 		Param_Cell,
+		Param_String);
+	gH_OnSessionEventPosted = new GlobalForward(
+		"GOKZTop_OnSessionEventPosted",
+		ET_Ignore,
+		Param_String,
 		Param_String);
 }
 
@@ -687,6 +693,8 @@ public void OnHTTPComplete(Handle request, bool failure, bool requestSuccessful,
 
 	if (IsHTTPResponseOK(failure, requestSuccessful, statusCode))
 	{
+		Call_OnSessionEventPostedIfNeeded(request, gC_RequestPathBuffer);
+
 		if (gCV_Debug.BoolValue)
 		{
 			LogMessage("[gokz-top-core] %s %s completed status=%d",
@@ -712,6 +720,38 @@ public void OnHTTPComplete(Handle request, bool failure, bool requestSuccessful,
 
 	delete pack;
 	delete request;
+}
+
+void Call_OnSessionEventPostedIfNeeded(Handle request, const char[] path)
+{
+	char event[16];
+	if (!GetSessionEventFromPath(path, event, sizeof(event)))
+	{
+		return;
+	}
+
+	char body[GOKZ_TOP_MAX_BODY_LENGTH];
+	if (!ReadHTTPResponseBody(request, body, sizeof(body)))
+	{
+		body[0] = '\0';
+	}
+
+	Call_StartForward(gH_OnSessionEventPosted);
+	Call_PushString(event);
+	Call_PushString(body);
+	Call_Finish();
+}
+
+bool GetSessionEventFromPath(const char[] path, char[] event, int maxLength)
+{
+	char prefix[] = "/v1/player-sessions/";
+	if (StrContains(path, prefix, false) != 0)
+	{
+		return false;
+	}
+
+	strcopy(event, maxLength, path[strlen(prefix)]);
+	return IsValidSessionEvent(event);
 }
 
 public Action Timer_RetryRequest(Handle timer, DataPack pack)

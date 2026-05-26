@@ -15,6 +15,7 @@
 #define GOKZ_TOP_STEAMID64_LENGTH 32
 #define GOKZ_TOP_IP_LENGTH 64
 #define GOKZ_TOP_SESSION_BODY_LENGTH 1024
+#define GOKZ_TOP_KICK_MESSAGE_LENGTH 512
 
 public Plugin myinfo =
 {
@@ -230,6 +231,83 @@ void SendDisconnectEvent(int client, const char[] disconnectAt)
 }
 
 
+// =====[ CORE CALLBACKS ]=====
+
+public void GOKZTop_OnSessionEventPosted(const char[] event, const char[] responseBody)
+{
+	if (!StrEqual(event, "connect"))
+	{
+		return;
+	}
+
+	HandleConnectResponse(responseBody);
+}
+
+void HandleConnectResponse(const char[] responseBody)
+{
+	char sessionID[GOKZ_TOP_SESSION_ID_LENGTH];
+	if (!ExtractJsonString(responseBody, "id", sessionID, sizeof(sessionID)))
+	{
+		return;
+	}
+
+	bool required;
+	if (!ExtractJsonBool(responseBody, "required", required) || !required)
+	{
+		return;
+	}
+
+	int client = FindClientBySessionID(sessionID);
+	if (client == 0 || !IsClientInGame(client))
+	{
+		return;
+	}
+
+	char kickMessage[GOKZ_TOP_KICK_MESSAGE_LENGTH];
+	if (!ExtractJsonString(responseBody, "kick_message", kickMessage, sizeof(kickMessage)))
+	{
+		FormatFallbackKickMessage(responseBody, kickMessage, sizeof(kickMessage));
+	}
+
+	ClearSession(client);
+	KickClient(client, "%s", kickMessage);
+}
+
+int FindClientBySessionID(const char[] sessionID)
+{
+	for (int client = 1; client <= MaxClients; client++)
+	{
+		if (gB_SessionActive[client] && StrEqual(gC_SessionID[client], sessionID))
+		{
+			return client;
+		}
+	}
+
+	return 0;
+}
+
+void FormatFallbackKickMessage(const char[] responseBody, char[] kickMessage, int maxLength)
+{
+	char banType[64];
+	char detailURL[256];
+	ExtractJsonString(responseBody, "ban_type", banType, sizeof(banType));
+	ExtractJsonString(responseBody, "detail_url", detailURL, sizeof(detailURL));
+
+	if (banType[0] == '\0')
+	{
+		strcopy(banType, sizeof(banType), "active");
+	}
+
+	if (detailURL[0] == '\0')
+	{
+		strcopy(kickMessage, maxLength, "Active GOKZ.TOP ban.");
+		return;
+	}
+
+	Format(kickMessage, maxLength, "Active GOKZ.TOP ban (%s). Details: %s", banType, detailURL);
+}
+
+
 
 // =====[ HELPERS ]=====
 
@@ -281,7 +359,7 @@ void FormatLocalISOTime(char[] buffer, int maxLength)
 
 void EscapeJSONString(const char[] input, char[] output, int maxLength)
 {
-	int written;
+	int written = 0;
 	for (int i = 0; input[i] != '\0' && written < maxLength - 1; i++)
 	{
 		if ((input[i] == '"' || input[i] == '\\') && written < maxLength - 2)
@@ -295,4 +373,93 @@ void EscapeJSONString(const char[] input, char[] output, int maxLength)
 	}
 
 	output[written] = '\0';
+}
+
+bool FindJsonValueStart(const char[] json, const char[] key, int &pos)
+{
+	char pattern[64];
+	Format(pattern, sizeof(pattern), "\"%s\"", key);
+
+	int keyPos = StrContains(json, pattern, false);
+	if (keyPos == -1)
+	{
+		return false;
+	}
+
+	pos = keyPos + strlen(pattern);
+	while (json[pos] != '\0' && json[pos] != ':')
+	{
+		pos++;
+	}
+
+	if (json[pos] != ':')
+	{
+		return false;
+	}
+
+	pos++;
+	while (json[pos] == ' ' || json[pos] == '\t' || json[pos] == '\r' || json[pos] == '\n')
+	{
+		pos++;
+	}
+
+	return json[pos] != '\0';
+}
+
+bool ExtractJsonBool(const char[] json, const char[] key, bool &value)
+{
+	value = false;
+
+	int pos;
+	if (!FindJsonValueStart(json, key, pos))
+	{
+		return false;
+	}
+
+	if (StrContains(json[pos], "true", false) == 0)
+	{
+		value = true;
+		return true;
+	}
+
+	if (StrContains(json[pos], "false", false) == 0)
+	{
+		return true;
+	}
+
+	return false;
+}
+
+bool ExtractJsonString(const char[] json, const char[] key, char[] out, int maxLength)
+{
+	out[0] = '\0';
+
+	int pos;
+	if (!FindJsonValueStart(json, key, pos)
+		|| json[pos] != '"')
+	{
+		return false;
+	}
+
+	pos++;
+	int outPos = 0;
+	while (json[pos] != '\0' && outPos < maxLength - 1)
+	{
+		char c = json[pos++];
+		if (c == '"')
+		{
+			out[outPos] = '\0';
+			return true;
+		}
+
+		if (c == '\\' && json[pos] != '\0')
+		{
+			c = json[pos++];
+		}
+
+		out[outPos++] = c;
+	}
+
+	out[outPos] = '\0';
+	return false;
 }
