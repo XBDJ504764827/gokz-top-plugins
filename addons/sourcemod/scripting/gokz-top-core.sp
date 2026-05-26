@@ -11,7 +11,7 @@
 #define GOKZ_TOP_DEFAULT_API_BASE_URL "https://staging-api.kzcharm.com"
 #define GOKZ_TOP_MAX_URL_LENGTH 512
 #define GOKZ_TOP_MAX_BODY_LENGTH 16384
-#define GOKZ_TOP_MAX_PATH_LENGTH 128
+#define GOKZ_TOP_MAX_PATH_LENGTH 512
 #define GOKZ_TOP_CFG_FOLDER "sourcemod/gokz-top"
 #define GOKZ_TOP_USER_AGENT "gokz-top-core/" ... GOKZ_TOP_VERSION
 
@@ -42,6 +42,8 @@ int gI_LeaderboardRegionalRank[MAXPLAYERS + 1][GOKZTOP_MODE_COUNT];
 int gI_LeaderboardPoints[MAXPLAYERS + 1][GOKZTOP_MODE_COUNT];
 char gC_LeaderboardRegion[MAXPLAYERS + 1][GOKZTOP_MODE_COUNT][8];
 GlobalForward gH_OnLeaderboardDataFetched;
+
+#include "gokz-top-core/records.sp"
 
 
 
@@ -91,6 +93,8 @@ public void OnPluginStart()
 	AutoExecConfig_ExecuteFile();
 	AutoExecConfig_CleanFile();
 
+	GOKZTopRecords_OnPluginStart();
+
 	gH_OnLeaderboardDataFetched = new GlobalForward(
 		"GOKZTop_OnLeaderboardDataFetched",
 		ET_Ignore,
@@ -106,6 +110,7 @@ public void OnPluginStart()
 public void OnClientConnected(int client)
 {
 	ClearClientLeaderboardCache(client);
+	GOKZTopRecords_OnClientConnected(client);
 }
 
 
