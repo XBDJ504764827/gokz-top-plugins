@@ -1,5 +1,3 @@
-#include <json>
-
 #include <gokz/core>
 
 #define GOKZ_TOP_STEAMID64_LENGTH 32
@@ -38,6 +36,8 @@ void GOKZTopRecords_OnPluginStart()
 	AddCommandListener(Command_Tier, "sm_tier");
 	AddCommandListener(Command_ShowPB, "sm_pb");
 	AddCommandListener(Command_ShowPB, "sm_gpb");
+	RegConsoleCmd("sm_pb", Command_ShowPBRegistered, "Show your KZCharm personal bests for the current map and mode.");
+	RegConsoleCmd("sm_gpb", Command_ShowPBRegistered, "Show your KZCharm personal bests for the current map and mode.");
 }
 
 void GOKZTopRecords_OnClientConnected(int client)
@@ -82,6 +82,11 @@ public Action Command_ShowPB(int client, const char[] command, int argc)
 	RequestPB(client, mode, GOKZ_TOP_RECORD_TYPE_NUB, true);
 	RequestPB(client, mode, GOKZ_TOP_RECORD_TYPE_PRO, true);
 	return Plugin_Handled;
+}
+
+public Action Command_ShowPBRegistered(int client, int argc)
+{
+	return Command_ShowPB(client, "sm_pb", argc);
 }
 
 public void GOKZ_OnFirstSpawn(int client)
