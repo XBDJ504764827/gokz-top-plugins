@@ -12,7 +12,8 @@ void PrintPBLine(int client, int mode, int recordType, const char[] mapName, flo
 	GetRecordTypeDisplay(recordType, prefix, sizeof(prefix));
 
 	GOKZ_PrintToChat(client, false,
-		"{purple}%s{default} - {darkblue}%s{default} - %s{default} PB [ {lightgreen}%s{default} | {yellow}%d{default}{grey} Pts{default} | {bluegrey}%s{default} ]",
+		"%s{purple}%s{default} - {darkblue}%s{default} - %s{default} PB [ {lightgreen}%s{default} | {yellow}%d{default}{grey} Pts{default} | {bluegrey}%s{default} ]",
+		GOKZ_TOP_RECORDS_PREFIX,
 		mapName,
 		gC_ModeNamesShort[mode],
 		prefix,
@@ -75,7 +76,8 @@ void PrintPBLineWithDiff(int client, int mode, int recordType, const char[] mapN
 	GetRecordTypeDisplay(recordType, prefix, sizeof(prefix));
 
 	GOKZ_PrintToChat(client, false,
-		"{purple}%s{default} - {darkblue}%s{default} - %s{default} PB [ {lightgreen}%s{default}%s | %s | {bluegrey}%s{default} ]",
+		"%s{purple}%s{default} - {darkblue}%s{default} - %s{default} PB [ {lightgreen}%s{default}%s | %s | {bluegrey}%s{default} ]",
+		GOKZ_TOP_RECORDS_PREFIX,
 		mapName,
 		gC_ModeNamesShort[mode],
 		prefix,

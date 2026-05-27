@@ -268,7 +268,8 @@ void HandleTierResponse(int client, const char[] mapName, const char[] body)
 		return;
 	}
 
-	GOKZ_PrintToChat(client, true, "{purple}%s{default} - {darkblue}KZT{default} T%d - {darkblue}SKZ{default} T%d - {darkblue}VNL{default} T%d",
+	GOKZ_PrintToChat(client, false, "%s{purple}%s{default} - {darkblue}KZT{default} T%d - {darkblue}SKZ{default} T%d - {darkblue}VNL{default} T%d",
+		GOKZ_TOP_RECORDS_PREFIX,
 		mapName,
 		kztTier,
 		skzTier,
@@ -285,7 +286,8 @@ void HandleNubWRResponse(int client, int mode, const char[] mapName, const char[
 
 	char time[32];
 	FormatDuration(time, sizeof(time), wrTime);
-	GOKZ_PrintToChat(client, false, "{purple}%s{default} - {darkblue}%s{default} - {gold}NUB{default} WR [ {lightgreen}%s{default} ]",
+	GOKZ_PrintToChat(client, false, "%s{purple}%s{default} - {darkblue}%s{default} - {gold}NUB{default} WR [ {lightgreen}%s{default} ]",
+		GOKZ_TOP_RECORDS_PREFIX,
 		mapName,
 		gC_ModeNamesShort[mode],
 		time);
