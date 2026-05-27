@@ -13,7 +13,7 @@ void PrintPBLine(int client, int mode, int recordType, const char[] mapName, flo
 
 	GOKZ_PrintToChat(client, false,
 		"%s{purple}%s{default} - {darkblue}%s{default} - %s{default} PB [ {lightgreen}%s{default} | {yellow}%d{default}{grey} Pts{default} | {bluegrey}%s{default} ]",
-		GOKZ_TOP_RECORDS_PREFIX,
+		GOKZ_TOP_CHAT_PREFIX,
 		mapName,
 		gC_ModeNamesShort[mode],
 		prefix,
@@ -77,7 +77,7 @@ void PrintPBLineWithDiff(int client, int mode, int recordType, const char[] mapN
 
 	GOKZ_PrintToChat(client, false,
 		"%s{purple}%s{default} - {darkblue}%s{default} - %s{default} PB [ {lightgreen}%s{default}%s | %s | {bluegrey}%s{default} ]",
-		GOKZ_TOP_RECORDS_PREFIX,
+		GOKZ_TOP_CHAT_PREFIX,
 		mapName,
 		gC_ModeNamesShort[mode],
 		prefix,

@@ -300,7 +300,7 @@ void AnnounceReviewChanges(int client, int flags)
 		{
 			if (IsValidClient(target))
 			{
-				GOKZ_PrintToChat(target, false, "%s%s", GOKZ_TOP_REVIEWS_PREFIX, message);
+				GOKZ_PrintToChat(target, false, "%s%s", GOKZ_TOP_CHAT_PREFIX, message);
 			}
 		}
 	}

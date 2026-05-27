@@ -13,7 +13,6 @@
 #pragma semicolon 1
 
 #define GOKZ_TOP_PROFILE_VERSION "0.1.0"
-#define GOKZ_TOP_PROFILE_PREFIX "{gold}.TOP {grey}| "
 #define MAX_STEAM_GROUP_TAG_LENGTH 9
 
 public Plugin myinfo =

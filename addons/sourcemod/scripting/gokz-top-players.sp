@@ -371,11 +371,11 @@ void FormatFallbackKickMessage(const char[] responseBody, const char[] banType, 
 
 	if (detailURL[0] == '\0')
 	{
-		strcopy(kickMessage, maxLength, "Active .TOP ban.");
+		strcopy(kickMessage, maxLength, "Active GOKZ.TOP ban.");
 		return;
 	}
 
-	Format(kickMessage, maxLength, "Active .TOP ban (%s). Details: %s", banType, detailURL);
+	Format(kickMessage, maxLength, "Active GOKZ.TOP ban (%s). Details: %s", banType, detailURL);
 }
 
 

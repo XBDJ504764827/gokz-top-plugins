@@ -8,6 +8,7 @@
 #define GOKZTOP_MODE_KZT 2
 #define GOKZTOP_MODE_OVR 3
 #define GOKZTOP_MODE_COUNT 4
+#define GOKZ_TOP_CHAT_PREFIX "{gold}.TOP {grey}| "
 
 enum GOKZTopLeaderboardDataState
 {

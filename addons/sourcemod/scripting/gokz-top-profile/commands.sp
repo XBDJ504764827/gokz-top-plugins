@@ -79,7 +79,7 @@ public Action CommandRating(int client, int args)
 
 	if (!gB_GokzTop)
 	{
-		GOKZ_PrintToChat(client, false, "%s{default}Leaderboard system not available.", GOKZ_TOP_PROFILE_PREFIX);
+		GOKZ_PrintToChat(client, false, "%s{default}Leaderboard system not available.", GOKZ_TOP_CHAT_PREFIX);
 		return Plugin_Handled;
 	}
 
@@ -88,7 +88,7 @@ public Action CommandRating(int client, int args)
 	if (!GOKZTop_IsLeaderboardDataLoaded(client, dataMode))
 	{
 		GOKZTop_RefreshLeaderboardData(client, dataMode);
-		GOKZ_PrintToChat(client, false, "%s{default}Your skill level data is not loaded yet, please wait...", GOKZ_TOP_PROFILE_PREFIX);
+		GOKZ_PrintToChat(client, false, "%s{default}Your skill level data is not loaded yet, please wait...", GOKZ_TOP_CHAT_PREFIX);
 		return Plugin_Handled;
 	}
 
@@ -99,7 +99,7 @@ public Action CommandRating(int client, int args)
 	if (rank > 0)
 	{
 		GOKZ_PrintToChat(client, false, "%s{default}Your Rating: {green}%.2f{default} {grey}| Rank: {green}#%d{default} {grey}| Level {green}%d",
-			GOKZ_TOP_PROFILE_PREFIX,
+			GOKZ_TOP_CHAT_PREFIX,
 			rating,
 			rank,
 			level);
@@ -107,7 +107,7 @@ public Action CommandRating(int client, int args)
 	else
 	{
 		GOKZ_PrintToChat(client, false, "%s{default}Your Rating: {green}%.2f{default} {grey}| Level {green}%d{default} {grey}(Not ranked)",
-			GOKZ_TOP_PROFILE_PREFIX,
+			GOKZ_TOP_CHAT_PREFIX,
 			rating,
 			level);
 	}

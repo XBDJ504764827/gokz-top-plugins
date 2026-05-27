@@ -88,5 +88,5 @@ void ReviewPrintToChat(int client, const char[] fmt, any ...)
 {
 	char message[256];
 	VFormat(message, sizeof(message), fmt, 3);
-	GOKZ_PrintToChat(client, false, "%s%s", GOKZ_TOP_REVIEWS_PREFIX, message);
+	GOKZ_PrintToChat(client, false, "%s%s", GOKZ_TOP_CHAT_PREFIX, message);
 }

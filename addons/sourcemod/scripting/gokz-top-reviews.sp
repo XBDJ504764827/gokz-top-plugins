@@ -3,6 +3,7 @@
 
 #include <gokz>
 #include <gokz/core>
+#include <gokz/top>
 
 #include <SteamWorks>
 
@@ -26,7 +27,6 @@ public Plugin myinfo =
 #define ReviewAspect_Visuals 0
 #define ReviewAspect_Overall 1
 #define ReviewAspect_Gameplay 2
-#define GOKZ_TOP_REVIEWS_PREFIX "{gold}.TOP {grey}| "
 
 ConVar gCV_APIBaseURL;
 ConVar gCV_APIKey;

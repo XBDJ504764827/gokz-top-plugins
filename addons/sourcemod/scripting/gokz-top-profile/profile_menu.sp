@@ -22,7 +22,7 @@ void ShowProfile(int client, int player = 0)
 
 	if (!gB_GokzTop)
 	{
-		GOKZ_PrintToChat(client, false, "%s{default}Leaderboard system not available.", GOKZ_TOP_PROFILE_PREFIX);
+		GOKZ_PrintToChat(client, false, "%s{default}Leaderboard system not available.", GOKZ_TOP_CHAT_PREFIX);
 		return;
 	}
 
@@ -32,7 +32,7 @@ void ShowProfile(int client, int player = 0)
 		{
 			GOKZTop_RefreshLeaderboardData(target, dataMode);
 			gB_ProfileWaitingForUpdate[client] = true;
-			GOKZ_PrintToChat(client, false, "%s{default}Profile data is loading...", GOKZ_TOP_PROFILE_PREFIX);
+			GOKZ_PrintToChat(client, false, "%s{default}Profile data is loading...", GOKZ_TOP_CHAT_PREFIX);
 		}
 		return;
 	}

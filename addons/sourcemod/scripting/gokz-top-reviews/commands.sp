@@ -9,7 +9,7 @@ public Action Command_Rate(int client, int args)
 {
 	if (!IsValidClientForReview(client))
 	{
-		ReplyToCommand(client, "[.TOP] This command can only be used in-game.");
+		ReplyToCommand(client, "[GOKZ.TOP] This command can only be used in-game.");
 		return Plugin_Handled;
 	}
 
