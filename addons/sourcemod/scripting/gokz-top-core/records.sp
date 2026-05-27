@@ -5,7 +5,7 @@
 #define GOKZ_TOP_DATE_LENGTH 16
 #define GOKZ_TOP_RECORD_TYPE_NUB 0
 #define GOKZ_TOP_RECORD_TYPE_PRO 1
-#define GOKZ_TOP_RECORDS_PREFIX "{gold}GOKZ.TOP {grey}| "
+#define GOKZ_TOP_RECORDS_PREFIX "{gold}.TOP {grey}| "
 
 enum GOKZTopAPIRequestType
 {

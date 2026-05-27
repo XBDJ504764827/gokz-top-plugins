@@ -13,7 +13,7 @@ void ShowRateMenuMain(int client)
 	Format(
 		title,
 		sizeof(title),
-		"GOKZ.TOP - Rate %s\n%s\n%s\n%s\nComments: %d",
+		".TOP - Rate %s\n%s\n%s\n%s\nComments: %d",
 		gC_CurrentMapName,
 		overallLine,
 		gameplayLine,
