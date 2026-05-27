@@ -21,20 +21,11 @@ enum GOKZTopLeaderboardDataState
 /**
  * Posts a raw JSON payload to a gokz-top API path.
  *
- * @param path		API path beginning with '/', for example "/v1/player-sessions/connect".
+ * @param path		API path beginning with '/', for example "/v1/servers/status".
  * @param body		JSON request body.
  * @return			True if the request was accepted by the local HTTP layer.
  */
 native bool GOKZTop_PostJSON(const char[] path, const char[] body);
-
-/**
- * Posts a player-session event to the gokz-top API.
- *
- * @param event		Session event name: "connect", "heartbeat", or "disconnect".
- * @param body		JSON request body for the event.
- * @return			True if the request was accepted by the local HTTP layer.
- */
-native bool GOKZTop_PostSessionEvent(const char[] event, const char[] body);
 
 /**
  * Refreshes cached leaderboard data for a client and mode.
@@ -124,14 +115,6 @@ forward void GOKZTop_OnLeaderboardDataFetched(
 	bool hasRegionalRank,
 	const char[] regionCode);
 
-/**
- * Called after a player-session event request completes successfully.
- *
- * @param event			Session event name: "connect", "heartbeat", or "disconnect".
- * @param responseBody	JSON response body returned by the API, or empty.
- */
-forward void GOKZTop_OnSessionEventPosted(const char[] event, const char[] responseBody);
-
 public SharedPlugin __pl_gokz_top_core =
 {
 	name = "gokz-top-core",
@@ -147,7 +130,6 @@ public SharedPlugin __pl_gokz_top_core =
 public void __pl_gokz_top_core_SetNTVOptional()
 {
 	MarkNativeAsOptional("GOKZTop_PostJSON");
-	MarkNativeAsOptional("GOKZTop_PostSessionEvent");
 	MarkNativeAsOptional("GOKZTop_RefreshLeaderboardData");
 	MarkNativeAsOptional("GOKZTop_GetLeaderboardDataState");
 	MarkNativeAsOptional("GOKZTop_IsLeaderboardDataLoaded");

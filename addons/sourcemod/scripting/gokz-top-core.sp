@@ -1,6 +1,9 @@
 #include <sourcemod>
+#include <sdktools>
 #include <SteamWorks>
 #include <autoexecconfig>
+
+#include <uuid>
 
 #include <gokz/top>
 
@@ -42,8 +45,8 @@ int gI_LeaderboardRegionalRank[MAXPLAYERS + 1][GOKZTOP_MODE_COUNT];
 int gI_LeaderboardPoints[MAXPLAYERS + 1][GOKZTOP_MODE_COUNT];
 char gC_LeaderboardRegion[MAXPLAYERS + 1][GOKZTOP_MODE_COUNT][8];
 GlobalForward gH_OnLeaderboardDataFetched;
-GlobalForward gH_OnSessionEventPosted;
 
+#include "gokz-top-core/players.sp"
 #include "gokz-top-core/records.sp"
 
 
@@ -53,7 +56,6 @@ GlobalForward gH_OnSessionEventPosted;
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int errMax)
 {
 	CreateNative("GOKZTop_PostJSON", Native_PostJSON);
-	CreateNative("GOKZTop_PostSessionEvent", Native_PostSessionEvent);
 	CreateNative("GOKZTop_RefreshLeaderboardData", Native_RefreshLeaderboardData);
 	CreateNative("GOKZTop_GetLeaderboardDataState", Native_GetLeaderboardDataState);
 	CreateNative("GOKZTop_IsLeaderboardDataLoaded", Native_IsLeaderboardDataLoaded);
@@ -67,6 +69,8 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int errMax)
 	CreateNative("GOKZTop_GetRegionCode", Native_GetRegionCode);
 	CreateNative("GOKZTop_GetPoints", Native_GetPoints);
 	RegPluginLibrary("gokz-top-core");
+
+	GOKZTopPlayers_AskPluginLoad2(late);
 
 	return APLRes_Success;
 }
@@ -94,6 +98,7 @@ public void OnPluginStart()
 	AutoExecConfig_ExecuteFile();
 	AutoExecConfig_CleanFile();
 
+	GOKZTopPlayers_OnPluginStart();
 	GOKZTopRecords_OnPluginStart();
 
 	gH_OnLeaderboardDataFetched = new GlobalForward(
@@ -106,17 +111,47 @@ public void OnPluginStart()
 		Param_Cell,
 		Param_Cell,
 		Param_String);
-	gH_OnSessionEventPosted = new GlobalForward(
-		"GOKZTop_OnSessionEventPosted",
-		ET_Ignore,
-		Param_String,
-		Param_String);
+}
+
+public void OnAllPluginsLoaded()
+{
+	GOKZTopPlayers_OnAllPluginsLoaded();
+}
+
+public void OnPluginEnd()
+{
+	GOKZTopPlayers_OnPluginEnd();
+}
+
+public void OnMapStart()
+{
+	GOKZTopPlayers_OnMapStart();
+}
+
+public void OnMapEnd()
+{
+	GOKZTopPlayers_OnMapEnd();
 }
 
 public void OnClientConnected(int client)
 {
 	ClearClientLeaderboardCache(client);
 	GOKZTopRecords_OnClientConnected(client);
+}
+
+public void OnClientPostAdminCheck(int client)
+{
+	GOKZTopPlayers_OnClientPostAdminCheck(client);
+}
+
+public void OnClientPutInServer(int client)
+{
+	GOKZTopPlayers_OnClientPutInServer(client);
+}
+
+public void OnClientDisconnect(int client)
+{
+	GOKZTopPlayers_OnClientDisconnect(client);
 }
 
 
@@ -138,23 +173,6 @@ public int Native_PostJSON(Handle plugin, int numParams)
 	GetNativeString(2, gC_RequestBodyBuffer, sizeof(gC_RequestBodyBuffer));
 
 	return PostJSON(gC_RequestPathBuffer, gC_RequestBodyBuffer);
-}
-
-public int Native_PostSessionEvent(Handle plugin, int numParams)
-{
-	GetNativeString(1, gC_RequestPathBuffer, sizeof(gC_RequestPathBuffer));
-
-	int bodyLength;
-	GetNativeStringLength(2, bodyLength);
-	if (bodyLength >= GOKZ_TOP_MAX_BODY_LENGTH)
-	{
-		ThrowNativeError(SP_ERROR_NATIVE, "JSON body exceeds %d bytes", GOKZ_TOP_MAX_BODY_LENGTH - 1);
-		return false;
-	}
-
-	GetNativeString(2, gC_RequestBodyBuffer, sizeof(gC_RequestBodyBuffer));
-
-	return PostSessionEvent(gC_RequestPathBuffer, gC_RequestBodyBuffer);
 }
 
 public int Native_RefreshLeaderboardData(Handle plugin, int numParams)
@@ -741,10 +759,7 @@ void Call_OnSessionEventPostedIfNeeded(Handle request, const char[] path)
 		body[0] = '\0';
 	}
 
-	Call_StartForward(gH_OnSessionEventPosted);
-	Call_PushString(event);
-	Call_PushString(body);
-	Call_Finish();
+	GOKZTopPlayers_OnSessionEventPosted(event, body);
 }
 
 bool GetSessionEventFromPath(const char[] path, char[] event, int maxLength)
