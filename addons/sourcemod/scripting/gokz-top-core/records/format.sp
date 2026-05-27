@@ -221,13 +221,13 @@ void GetTierColor(int tier, char[] buffer, int maxLength)
 	switch (tier)
 	{
 		case 1: strcopy(buffer, maxLength, "{lightgreen}");
-		case 2: strcopy(buffer, maxLength, "{seagreen}");
-		case 3: strcopy(buffer, maxLength, "{orange}");
-		case 4: strcopy(buffer, maxLength, "{darkorange}");
-		case 5: strcopy(buffer, maxLength, "{red}");
-		case 6: strcopy(buffer, maxLength, "{firebrick}");
-		case 7: strcopy(buffer, maxLength, "{darkviolet}");
-		case 8: strcopy(buffer, maxLength, "{mediumvioletred}");
+		case 2: strcopy(buffer, maxLength, "{green}");
+		case 3: strcopy(buffer, maxLength, "{yellow}");
+		case 4: strcopy(buffer, maxLength, "{gold}");
+		case 5: strcopy(buffer, maxLength, "{lightred}");
+		case 6: strcopy(buffer, maxLength, "{red}");
+		case 7: strcopy(buffer, maxLength, "{purple}");
+		case 8: strcopy(buffer, maxLength, "{orchid}");
 		default: strcopy(buffer, maxLength, "{grey}");
 	}
 }
