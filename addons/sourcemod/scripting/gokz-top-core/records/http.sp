@@ -268,12 +268,19 @@ void HandleTierResponse(int client, const char[] mapName, const char[] body)
 		return;
 	}
 
-	GOKZ_PrintToChat(client, false, "%s{purple}%s{default} - {darkblue}KZT{default} T%d - {darkblue}SKZ{default} T%d - {darkblue}VNL{default} T%d",
+	char kztTierDisplay[32];
+	char skzTierDisplay[32];
+	char vnlTierDisplay[32];
+	FormatTierDisplay(kztTier, kztTierDisplay, sizeof(kztTierDisplay));
+	FormatTierDisplay(skzTier, skzTierDisplay, sizeof(skzTierDisplay));
+	FormatTierDisplay(vnlTier, vnlTierDisplay, sizeof(vnlTierDisplay));
+
+	GOKZ_PrintToChat(client, false, "%s{purple}%s{default} - {darkblue}KZT{default} %s - {darkblue}SKZ{default} %s - {darkblue}VNL{default} %s",
 		GOKZ_TOP_RECORDS_PREFIX,
 		mapName,
-		kztTier,
-		skzTier,
-		vnlTier);
+		kztTierDisplay,
+		skzTierDisplay,
+		vnlTierDisplay);
 }
 
 void HandleNubWRResponse(int client, int mode, const char[] mapName, const char[] body)

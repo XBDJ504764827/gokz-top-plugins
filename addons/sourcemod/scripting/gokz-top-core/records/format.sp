@@ -209,6 +209,29 @@ void GetRecordTypeDisplay(int recordType, char[] buffer, int maxLength)
 	}
 }
 
+void FormatTierDisplay(int tier, char[] buffer, int maxLength)
+{
+	char color[32];
+	GetTierColor(tier, color, sizeof(color));
+	Format(buffer, maxLength, "%sT%d{default}", color, tier);
+}
+
+void GetTierColor(int tier, char[] buffer, int maxLength)
+{
+	switch (tier)
+	{
+		case 1: strcopy(buffer, maxLength, "{lightgreen}");
+		case 2: strcopy(buffer, maxLength, "{seagreen}");
+		case 3: strcopy(buffer, maxLength, "{orange}");
+		case 4: strcopy(buffer, maxLength, "{darkorange}");
+		case 5: strcopy(buffer, maxLength, "{red}");
+		case 6: strcopy(buffer, maxLength, "{firebrick}");
+		case 7: strcopy(buffer, maxLength, "{darkviolet}");
+		case 8: strcopy(buffer, maxLength, "{mediumvioletred}");
+		default: strcopy(buffer, maxLength, "{grey}");
+	}
+}
+
 void ISODateOnly(const char[] value, char[] out, int maxLength)
 {
 	strcopy(out, maxLength, value);
