@@ -14,6 +14,7 @@
 
 #define GOKZ_TOP_PROFILE_VERSION "0.1.0"
 #define MAX_STEAM_GROUP_TAG_LENGTH 9
+#define GOKZ_TOP_RANK_COUNT 10
 
 public Plugin myinfo =
 {
@@ -34,6 +35,7 @@ char gC_OriginalSteamGroupTag[MAXPLAYERS + 1][32];
 stock char gC_GokzTopRankColor[11][] =
 {
 	"{grey}",
+	"{grey}",
 	"{default}",
 	"{blue}",
 	"{lightgreen}",
@@ -41,9 +43,23 @@ stock char gC_GokzTopRankColor[11][] =
 	"{purple}",
 	"{orchid}",
 	"{lightred}",
-	"{lightred}",
 	"{red}",
 	"{gold}"
+};
+
+stock char gC_GokzTopRankName[GOKZ_TOP_RANK_COUNT + 1][] =
+{
+	"",
+	"New",
+	"Beginner",
+	"Amateur",
+	"Casual",
+	"Regular",
+	"Skilled",
+	"Expert",
+	"Pro",
+	"Master",
+	"Legend"
 };
 
 #include "gokz-top-profile/api.sp"

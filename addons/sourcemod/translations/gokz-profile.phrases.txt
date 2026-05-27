@@ -97,8 +97,8 @@
 	}
 	"Rank Info Menu - Points needed"
 	{
-		"en"		"Points needed"
-		"chi"		"需要的分数"
+		"en"		"Rating needed"
+		"chi"		"需要的评分"
 	}
 	"Tag - Admin"
 	{

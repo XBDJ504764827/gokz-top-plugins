@@ -26,7 +26,7 @@ void UpdateRank(int client, int mode)
 		return;
 	}
 
-	int rank = GetRankForPoints(GOKZTop_GetPoints(client, dataMode), dataMode);
+	int rank = GetRankForRating(GOKZTop_GetRating(client, dataMode));
 	UpdateTags(client, rank, mode);
 	SetCachedRank(client, mode, rank);
 }
@@ -79,8 +79,8 @@ void UpdateSpecialTags(int client, int displayMode, int dataMode, int tagType)
 		float rating = GOKZTop_GetRating(client, dataMode);
 		if (rating > 0.0)
 		{
-			FormatEx(clanTag, sizeof(clanTag), "[%s Lv.%d]", gC_ModeNamesShort[displayMode], GetSkillLevelFromRating(rating));
-			FormatEx(chatTag, sizeof(chatTag), "Lv.%d", GetSkillLevelFromRating(rating));
+			FormatEx(clanTag, sizeof(clanTag), "[%s Rt %.2f]", gC_ModeNamesShort[displayMode], rating);
+			FormatEx(chatTag, sizeof(chatTag), "Rt %.2f", rating);
 			GetGokzTopRankColorFromRating(rating, color, sizeof(color));
 		}
 		else
@@ -120,11 +120,11 @@ void UpdateTags(int client, int rank, int mode)
 	char clanTag[64];
 	char chatTag[32];
 	char color[32];
-	if (rank >= 0)
+	if (rank > 0 && rank <= GOKZ_TOP_RANK_COUNT)
 	{
-		FormatEx(clanTag, sizeof(clanTag), "[%s %s]", gC_ModeNamesShort[mode], gC_rankName[rank]);
-		strcopy(chatTag, sizeof(chatTag), gC_rankName[rank]);
-		strcopy(color, sizeof(color), gC_rankColor[rank]);
+		FormatEx(clanTag, sizeof(clanTag), "[%s %s]", gC_ModeNamesShort[mode], gC_GokzTopRankName[rank]);
+		strcopy(chatTag, sizeof(chatTag), gC_GokzTopRankName[rank]);
+		strcopy(color, sizeof(color), gC_GokzTopRankColor[rank]);
 	}
 	else
 	{
@@ -170,35 +170,25 @@ void SetCachedRank(int client, int mode, int rank)
 	Call_OnRankUpdated(client, mode, rank);
 }
 
-int GetRankForPoints(int points, int mode)
+int GetRankForRating(float rating)
 {
-	int rank;
-	for (rank = 1; rank < RANK_COUNT; rank++)
+	int rank = GetSkillLevelFromRating(rating);
+	if (rank < 1)
 	{
-		if (points < gI_rankThreshold[mode][rank])
-		{
-			break;
-		}
+		return 1;
 	}
 
-	return rank - 1;
+	if (rank > GOKZ_TOP_RANK_COUNT)
+	{
+		return GOKZ_TOP_RANK_COUNT;
+	}
+
+	return rank;
 }
 
 void GetGokzTopRankColorFromRating(float rating, char[] color, int maxLength)
 {
-	int level = GetSkillLevelFromRating(rating);
-	if (level < 1)
-	{
-		strcopy(color, maxLength, gC_GokzTopRankColor[0]);
-	}
-	else if (level > 10)
-	{
-		strcopy(color, maxLength, gC_GokzTopRankColor[10]);
-	}
-	else
-	{
-		strcopy(color, maxLength, gC_GokzTopRankColor[level]);
-	}
+	strcopy(color, maxLength, gC_GokzTopRankColor[GetRankForRating(rating)]);
 }
 
 bool CanUseTagType(int client, int tagType)

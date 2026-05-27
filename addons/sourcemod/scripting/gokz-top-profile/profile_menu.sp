@@ -44,19 +44,19 @@ void ShowProfile(int client, int player = 0)
 	char region[8];
 	GOKZTop_GetRegionCode(target, dataMode, region, sizeof(region));
 	int points = GOKZTop_GetPoints(target, dataMode);
-	int rankThresholdMode = GetProfileRankThresholdMode(gI_ProfileMode[client]);
-	int legacyRank = GetRankForPoints(points, rankThresholdMode);
+	float rating = GOKZTop_GetRating(target, dataMode);
+	int rank = GetRankForRating(rating);
 	char formattedPoints[16];
 	FormatIntWithCommas(points, formattedPoints, sizeof(formattedPoints));
 	if (gI_ProfileMode[client] < MODE_COUNT)
 	{
-		SetCachedRank(target, gI_ProfileMode[client], legacyRank);
+		SetCachedRank(target, gI_ProfileMode[client], rank);
 	}
 
 	Format(title, sizeof(title),
 		"Profile - %N\nRating: %.2f\nGlobal Rank: #%d\nRegional Rank: -\nPoints: %s",
 		target,
-		GOKZTop_GetRating(target, dataMode),
+		rating,
 		GOKZTop_GetGlobalRank(target, dataMode),
 		formattedPoints);
 
@@ -65,7 +65,7 @@ void ShowProfile(int client, int player = 0)
 		Format(title, sizeof(title),
 			"Profile - %N\nRating: %.2f\nGlobal Rank: #%d\nRegional Rank: %s#%d\nPoints: %s",
 			target,
-			GOKZTop_GetRating(target, dataMode),
+			rating,
 			GOKZTop_GetGlobalRank(target, dataMode),
 			region,
 			GOKZTop_GetRegionalRank(target, dataMode),
@@ -81,7 +81,7 @@ void ShowProfile(int client, int player = 0)
 	Format(display, sizeof(display), "Scope: %s", scopeLabel);
 	menu.AddItem(PROFILE_ITEM_MODE, display);
 
-	Format(display, sizeof(display), "%T: %s", "Profile Menu - Rank", client, gC_rankName[legacyRank]);
+	Format(display, sizeof(display), "%T: %s", "Profile Menu - Rank", client, gC_GokzTopRankName[rank]);
 	menu.AddItem(PROFILE_ITEM_RANK, display);
 
 	menu.Display(client, MENU_TIME_FOREVER);
@@ -95,16 +95,6 @@ int GetProfileDataScope(int scope)
 	}
 
 	return GOKZTOP_MODE_KZT;
-}
-
-int GetProfileRankThresholdMode(int scope)
-{
-	if (scope >= 0 && scope < MODE_COUNT)
-	{
-		return scope;
-	}
-
-	return Mode_KZTimer;
 }
 
 void GetProfileScopeLabel(int scope, char[] buffer, int maxLength)
@@ -221,9 +211,8 @@ void ShowRankInfo(int client)
 	int target = gI_ProfileTarget[client];
 	int mode = gI_ProfileMode[client];
 	int dataScope = GetProfileDataScope(mode);
-	int rankThresholdMode = GetProfileRankThresholdMode(mode);
-	int points = gB_GokzTop ? GOKZTop_GetPoints(target, dataScope) : 0;
-	int rank = GetRankForPoints(points, rankThresholdMode);
+	float rating = gB_GokzTop ? GOKZTop_GetRating(target, dataScope) : 0.0;
+	int rank = GetRankForRating(rating);
 	if (mode < MODE_COUNT)
 	{
 		SetCachedRank(target, mode, rank);
@@ -236,22 +225,22 @@ void ShowRankInfo(int client)
 	menu.ExitBackButton = true;
 
 	char display[96];
-	Format(display, sizeof(display), "%T: %s", "Rank Info Menu - Current Rank", client, gC_rankName[rank]);
+	Format(display, sizeof(display), "%T: %s", "Rank Info Menu - Current Rank", client, gC_GokzTopRankName[rank]);
 	menu.AddItem("", display, ITEMDRAW_DISABLED);
 
 	int nextRank = rank + 1;
-	if (nextRank >= RANK_COUNT)
+	if (nextRank > GOKZ_TOP_RANK_COUNT)
 	{
 		Format(display, sizeof(display), "%T: -", "Rank Info Menu - Next Rank", client);
 		menu.AddItem("", display, ITEMDRAW_DISABLED);
-		Format(display, sizeof(display), "%T: 0", "Rank Info Menu - Points needed", client);
+		Format(display, sizeof(display), "%T: 0.00", "Rank Info Menu - Points needed", client);
 		menu.AddItem("", display, ITEMDRAW_DISABLED);
 	}
 	else
 	{
-		Format(display, sizeof(display), "%T: %s", "Rank Info Menu - Next Rank", client, gC_rankName[nextRank]);
+		Format(display, sizeof(display), "%T: %s", "Rank Info Menu - Next Rank", client, gC_GokzTopRankName[nextRank]);
 		menu.AddItem("", display, ITEMDRAW_DISABLED);
-		Format(display, sizeof(display), "%T: %d", "Rank Info Menu - Points needed", client, gI_rankThreshold[rankThresholdMode][nextRank] - points);
+		Format(display, sizeof(display), "%T: %.2f", "Rank Info Menu - Points needed", client, float(nextRank) - rating);
 		menu.AddItem("", display, ITEMDRAW_DISABLED);
 	}
 

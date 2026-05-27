@@ -54,12 +54,12 @@ public Action CommandRanks(int client, int args)
 	char buffer[256];
 	Format(buffer, sizeof(buffer), "%s: ", gC_ModeNamesShort[mode]);
 
-	for (int i = 0; i < RANK_COUNT; i++)
+	for (int i = 1; i <= GOKZ_TOP_RANK_COUNT; i++)
 	{
-		Format(rankBuffer, sizeof(rankBuffer), "%s%s (%d) ", gC_rankColor[i], gC_rankName[i], gI_rankThreshold[mode][i]);
+		Format(rankBuffer, sizeof(rankBuffer), "%s%s (Rt %.2f) ", gC_GokzTopRankColor[i], gC_GokzTopRankName[i], float(i));
 		StrCat(buffer, sizeof(buffer), rankBuffer);
 
-		if (i > 0 && i % 3 == 0)
+		if (i % 3 == 0)
 		{
 			GOKZ_PrintToChat(client, true, buffer);
 			Format(buffer, sizeof(buffer), "%s: ", gC_ModeNamesShort[mode]);
@@ -88,28 +88,32 @@ public Action CommandRating(int client, int args)
 	if (!GOKZTop_IsLeaderboardDataLoaded(client, dataMode))
 	{
 		GOKZTop_RefreshLeaderboardData(client, dataMode);
-		GOKZ_PrintToChat(client, false, "%s{default}Your skill level data is not loaded yet, please wait...", GOKZ_TOP_CHAT_PREFIX);
+		GOKZ_PrintToChat(client, false, "%s{default}Your rating data is not loaded yet, please wait...", GOKZ_TOP_CHAT_PREFIX);
 		return Plugin_Handled;
 	}
 
 	float rating = GOKZTop_GetRating(client, dataMode);
-	int rank = GOKZTop_GetGlobalRank(client, dataMode);
-	int level = GetSkillLevelFromRating(rating);
+	int globalRank = GOKZTop_GetGlobalRank(client, dataMode);
+	int rank = GetRankForRating(rating);
+	char color[32];
+	GetGokzTopRankColorFromRating(rating, color, sizeof(color));
 
-	if (rank > 0)
+	if (globalRank > 0)
 	{
-		GOKZ_PrintToChat(client, false, "%s{default}Your Rating: {green}%.2f{default} {grey}| Rank: {green}#%d{default} {grey}| Level {green}%d",
+		GOKZ_PrintToChat(client, false, "%s{default}Your Rating: {green}%.2f{default} {grey}| Rank: %s%s{default} {grey}| Global: {green}#%d",
 			GOKZ_TOP_CHAT_PREFIX,
 			rating,
-			rank,
-			level);
+			color,
+			gC_GokzTopRankName[rank],
+			globalRank);
 	}
 	else
 	{
-		GOKZ_PrintToChat(client, false, "%s{default}Your Rating: {green}%.2f{default} {grey}| Level {green}%d{default} {grey}(Not ranked)",
+		GOKZ_PrintToChat(client, false, "%s{default}Your Rating: {green}%.2f{default} {grey}| Rank: %s%s{default} {grey}| Global: {grey}Not ranked",
 			GOKZ_TOP_CHAT_PREFIX,
 			rating,
-			level);
+			color,
+			gC_GokzTopRankName[rank]);
 	}
 
 	return Plugin_Handled;
