@@ -6,7 +6,7 @@ void PrintPBLine(int client, int mode, int recordType, const char[] mapName, flo
 	FormatDuration(time, sizeof(time), pbTime);
 
 	char dateShort[32];
-	FormatDateShort(dateOnly, dateShort, sizeof(dateShort));
+	FormatDateForClient(client, dateOnly, dateShort, sizeof(dateShort));
 
 	char prefix[16];
 	GetRecordTypeDisplay(recordType, prefix, sizeof(prefix));
@@ -29,7 +29,7 @@ void PrintPBLineWithDiff(int client, int mode, int recordType, const char[] mapN
 	FormatDuration(time, sizeof(time), pbTime);
 
 	char dateShort[32];
-	FormatDateShort(dateOnly, dateShort, sizeof(dateShort));
+	FormatDateForClient(client, dateOnly, dateShort, sizeof(dateShort));
 
 	char diffInline[48];
 	diffInline[0] = '\0';
@@ -278,6 +278,57 @@ void FormatDateShort(const char[] ymd, char[] out, int maxLength)
 	}
 
 	Format(out, maxLength, "%s. %s %s", parts[2], monthName, parts[0]);
+}
+
+void FormatDateForClient(int client, const char[] ymd, char[] out, int maxLength)
+{
+	if (IsClientLanguageChinese(client))
+	{
+		strcopy(out, maxLength, ymd);
+		return;
+	}
+
+	FormatDateShort(ymd, out, maxLength);
+}
+
+bool IsClientLanguageChinese(int client)
+{
+	char language[32];
+	GetNormalizedClientLanguage(client, language, sizeof(language));
+	return StrEqual(language, "chi", false);
+}
+
+void GetNormalizedClientLanguage(int client, char[] buffer, int maxLength)
+{
+	int language = GetClientLanguage(client);
+	if (language < 0)
+	{
+		strcopy(buffer, maxLength, "en");
+		return;
+	}
+
+	GetLanguageInfo(language, buffer, maxLength);
+	NormalizeRecordClientLanguage(buffer, buffer, maxLength);
+	if (buffer[0] == '\0')
+	{
+		strcopy(buffer, maxLength, "en");
+	}
+}
+
+void NormalizeRecordClientLanguage(const char[] input, char[] buffer, int maxLength)
+{
+	if (StrEqual(input, "chi", false)
+		|| StrEqual(input, "zh", false)
+		|| StrEqual(input, "zho", false)
+		|| StrEqual(input, "schinese", false)
+		|| StrEqual(input, "tchinese", false)
+		|| StrEqual(input, "chinese", false))
+	{
+		strcopy(buffer, maxLength, "chi");
+		return;
+	}
+
+	strcopy(buffer, maxLength, input);
 }
 
 int FormatDuration(char[] buffer, int maxLength, float duration)
