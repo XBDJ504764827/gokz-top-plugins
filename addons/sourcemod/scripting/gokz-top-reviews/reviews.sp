@@ -125,9 +125,9 @@ void SubmitDraftReview(int client)
 		return;
 	}
 
-	if (!HasServerGroupKey())
+	if (!HasAPIKey())
 	{
-		ReviewLog("event=submit_draft_blocked client=%d reason=missing_server_group_key", client);
+		ReviewLog("event=submit_draft_blocked client=%d reason=missing_api_key", client);
 		GOKZ_PlayErrorSound(client);
 		ReviewPrintToChat(client, "%t", "Reviews Error - MissingServerGroupKey");
 		return;

@@ -30,7 +30,6 @@ public Plugin myinfo =
 
 ConVar gCV_APIBaseURL;
 ConVar gCV_APIKey;
-ConVar gCV_ServerGroupKey;
 ConVar gCV_RequestTimeout;
 
 bool gB_RateReminderSent[MAXPLAYERS + 1];

@@ -152,9 +152,9 @@
 	}
 	"Reviews Error - MissingServerGroupKey"
 	{
-		"en"		"{grey}This server is missing {default}gokz_top_server_group_key{grey}, so reviews cannot be submitted."
-		"ru"		"{grey}На этом сервере отсутствует {default}gokz_top_server_group_key{grey}, поэтому отзывы нельзя отправить."
-		"chi"		"{grey}此服务器缺少 {default}gokz_top_server_group_key{grey}，因此无法提交评价。"
+		"en"		"{grey}This server is missing {default}gokz_top_api_key{grey}, so reviews cannot be submitted."
+		"ru"		"{grey}На этом сервере отсутствует {default}gokz_top_api_key{grey}, поэтому отзывы нельзя отправить."
+		"chi"		"{grey}此服务器缺少 {default}gokz_top_api_key{grey}，因此无法提交评价。"
 	}
 	"Reviews Error - BaseUrlMissing"
 	{

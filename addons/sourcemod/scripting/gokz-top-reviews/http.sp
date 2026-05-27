@@ -2,7 +2,6 @@ void FindSharedConVars()
 {
 	gCV_APIBaseURL = FindConVar("gokz_top_api_base_url");
 	gCV_APIKey = FindConVar("gokz_top_api_key");
-	gCV_ServerGroupKey = FindConVar("gokz_top_server_group_key");
 	gCV_RequestTimeout = FindConVar("gokz_top_request_timeout");
 }
 
@@ -165,16 +164,17 @@ void ApplyAuthHeaders(Handle request)
 		return;
 	}
 
-	char serverGroupKey[256];
-	serverGroupKey[0] = '\0';
-	if (gCV_ServerGroupKey != null)
+	char apiKey[256];
+	apiKey[0] = '\0';
+	if (gCV_APIKey != null)
 	{
-		gCV_ServerGroupKey.GetString(serverGroupKey, sizeof(serverGroupKey));
+		gCV_APIKey.GetString(apiKey, sizeof(apiKey));
+		TrimString(apiKey);
 	}
 
-	if (serverGroupKey[0] != '\0')
+	if (apiKey[0] != '\0')
 	{
-		SteamWorks_SetHTTPRequestHeaderValue(request, "X-Server-Group-Key", serverGroupKey);
+		SteamWorks_SetHTTPRequestHeaderValue(request, "X-Server-Group-Key", apiKey);
 	}
 }
 
@@ -188,16 +188,16 @@ int GetRequestTimeoutMS()
 	return gCV_RequestTimeout.IntValue * 1000;
 }
 
-bool HasServerGroupKey()
+bool HasAPIKey()
 {
-	if (gCV_ServerGroupKey == null)
+	if (gCV_APIKey == null)
 	{
 		return false;
 	}
 
-	char serverGroupKey[4];
-	gCV_ServerGroupKey.GetString(serverGroupKey, sizeof(serverGroupKey));
-	return serverGroupKey[0] != '\0';
+	char apiKey[4];
+	gCV_APIKey.GetString(apiKey, sizeof(apiKey));
+	return apiKey[0] != '\0';
 }
 
 void LogAuthMode()
@@ -209,19 +209,11 @@ void LogAuthMode()
 		gCV_APIBaseURL.GetString(base, sizeof(base));
 	}
 
-	bool hasServerGroupKey = HasServerGroupKey();
-	bool hasAPIKey = false;
-	if (gCV_APIKey != null)
-	{
-		char apiKey[4];
-		gCV_APIKey.GetString(apiKey, sizeof(apiKey));
-		hasAPIKey = apiKey[0] != '\0';
-	}
+	bool hasAPIKey = HasAPIKey();
 
 	ReviewLog(
-		"event=auth_mode base_url=%s server_group_key=%d api_key=%d authorization_header=0",
+		"event=auth_mode base_url=%s api_key=%d authorization_header=0",
 		base,
-		hasServerGroupKey,
 		hasAPIKey
 	);
 }
