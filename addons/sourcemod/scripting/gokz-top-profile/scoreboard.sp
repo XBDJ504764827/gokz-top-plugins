@@ -1,6 +1,8 @@
 int gI_SkillLevel[MAXPLAYERS + 1][MODE_COUNT];
 int gI_PersonaDataPublicLevel = -1;
 
+#define GOKZ_TOP_SCOREBOARD_LEVEL_OFFSET 5100
+
 void OnPluginStart_Scoreboard()
 {
 	gI_PersonaDataPublicLevel = FindSendPropInfo("CCSPlayerResource", "m_nPersonaDataPublicLevel");
@@ -9,9 +11,9 @@ void OnPluginStart_Scoreboard()
 void OnMapStart_Scoreboard()
 {
 	char path[PLATFORM_MAX_PATH];
-	for (int i = 0; i < 11; i++)
+	for (int i = 0; i <= 11; i++)
 	{
-		Format(path, sizeof(path), "materials/panorama/images/icons/xp/level%i.png", 5001 + i);
+		Format(path, sizeof(path), "materials/panorama/images/icons/xp/level%i.png", GOKZ_TOP_SCOREBOARD_LEVEL_OFFSET + i);
 		AddFileToDownloadsTable(path);
 	}
 
@@ -79,12 +81,12 @@ void UpdateScoreboardIcon(int client)
 
 	int mode = GetClientDisplayMode(client);
 	int level = gI_SkillLevel[client][mode];
-	if (level <= 0)
+	if (level < 0)
 	{
-		level = 1;
+		level = 0;
 	}
 
-	SetEntData(ent, gI_PersonaDataPublicLevel + client * 4, 5000 + level, 4, true);
+	SetEntData(ent, gI_PersonaDataPublicLevel + client * 4, GOKZ_TOP_SCOREBOARD_LEVEL_OFFSET + level, 4, true);
 }
 
 public void Hook_OnThinkPost(int ent)
