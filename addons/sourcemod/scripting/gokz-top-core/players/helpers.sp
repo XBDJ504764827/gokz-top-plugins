@@ -26,6 +26,23 @@ void GOKZTopPlayers_GetClientLanguageCode(int client, char[] buffer, int maxLeng
 	int language = GetClientLanguage(client);
 	if (language < 0)
 	{
+		GOKZTopPlayers_GetServerLanguageCode(buffer, maxLength);
+		return;
+	}
+
+	GetLanguageInfo(language, buffer, maxLength);
+	GOKZTopPlayers_NormalizeClientLanguage(buffer, buffer, maxLength);
+	if (buffer[0] == '\0')
+	{
+		GOKZTopPlayers_GetServerLanguageCode(buffer, maxLength);
+	}
+}
+
+void GOKZTopPlayers_GetServerLanguageCode(char[] buffer, int maxLength)
+{
+	int language = GetServerLanguage();
+	if (language < 0)
+	{
 		strcopy(buffer, maxLength, "en");
 		return;
 	}

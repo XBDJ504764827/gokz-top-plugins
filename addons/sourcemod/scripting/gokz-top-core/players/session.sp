@@ -20,6 +20,7 @@ void StartSession(int client)
 
 	if (QueryClientConVar(client, "cl_language", OnClientLanguageQueried) == QUERYCOOKIE_FAILED)
 	{
+		GOKZTopPlayers_GetServerLanguageCode(gC_ClientLanguage[client], sizeof(gC_ClientLanguage[]));
 		SendConnectEventOnce(client);
 		return;
 	}
@@ -82,6 +83,14 @@ public void OnClientLanguageQueried(QueryCookie cookie, int client, ConVarQueryR
 	if (result == ConVarQuery_Okay)
 	{
 		GOKZTopPlayers_NormalizeClientLanguage(cvarValue, gC_ClientLanguage[client], sizeof(gC_ClientLanguage[]));
+		if (gC_ClientLanguage[client][0] == '\0')
+		{
+			GOKZTopPlayers_GetServerLanguageCode(gC_ClientLanguage[client], sizeof(gC_ClientLanguage[]));
+		}
+	}
+	else
+	{
+		GOKZTopPlayers_GetServerLanguageCode(gC_ClientLanguage[client], sizeof(gC_ClientLanguage[]));
 	}
 
 	SendConnectEventOnce(client);
@@ -92,6 +101,7 @@ public Action Timer_SendConnectFallback(Handle timer, any userid)
 	int client = GetClientOfUserId(userid);
 	if (client != 0 && gB_SessionActive[client] && !gB_ConnectSent[client])
 	{
+		GOKZTopPlayers_GetServerLanguageCode(gC_ClientLanguage[client], sizeof(gC_ClientLanguage[]));
 		SendConnectEventOnce(client);
 	}
 
