@@ -1,85 +1,93 @@
-# GOKZ Example SourceMod Template
+# gokz-top-plugins
 
-This repository is a small, self-contained template for building SourceMod plugins that run on top of an existing [GOKZ](https://github.com/KZGlobalTeam/gokz) installation.
+SourceMod plugins for integrating a CS:GO GOKZ server with [GOKZ.TOP](https://kzcharm.com).
 
-It mirrors the upstream GOKZ project in the places that matter for addon development:
+## Plugins
 
-- `addons/sourcemod/scripting` layout and multi-file plugin structure
-- SourceMod 1.11 / CS:GO compile target
-- `autoexecconfig`-based server config generation
-- GOKZ option registration and options-menu integration
-- GitHub Actions packaging similar to the upstream CI flow
-
-## Included Example
-
-The template ships one example addon: `gokz-example`.
-
-It demonstrates how to:
-
-- register a player option with GOKZ
-- add that option into the GOKZ general options menu
-- expose chat commands with `sm_example` and `sm_gokzexample`
-- react to `GOKZ_OnTimerEnd_Post`
-- generate `cfg/sourcemod/gokz/gokz-example.cfg`
-
-The example plugin is intentionally small so it can be renamed and expanded into a real addon.
+- `gokz-top-core`: shared API configuration, HTTP helpers, player sessions, and leaderboard/profile data access.
+- `gokz-top-servers`: live server status heartbeats for the public server browser.
+- `gokz-top-profile`: in-game profile, rating, rank, tag, and scoreboard integrations.
+- `gokz-top-reviews`: in-game map review submission.
 
 ## Requirements
 
-- CS:GO server
-- SourceMod `1.11`
-- Existing GOKZ installation providing `gokz-core`
+- CS:GO dedicated server
+- SourceMod 1.11
+- SteamWorks extension
+- Existing GOKZ installation
+- A GOKZ.TOP server group API key
 
-This repository includes a minimal `include/gokz/core.inc` shim so the example plugin can compile in isolation. Runtime support still comes from the real GOKZ plugins on the server.
+## Apply For An API Key
 
-## Layout
+API keys are issued per server group on GOKZ.TOP.
 
-- `addons/sourcemod/scripting/gokz-example.sp` — main plugin entrypoint
-- `addons/sourcemod/scripting/gokz-example/` — modular feature files
-- `addons/sourcemod/scripting/include/gokz/` — minimal version + GOKZ compile shim
-- `addons/sourcemod/translations/gokz-example.phrases.txt` — example phrases
-- `cfg/sourcemod/gokz/` — generated config target directory
-- `.github/workflows/main.yml` — compile + package workflow
+1. Sign in to [kzcharm.com](https://kzcharm.com).
+2. Open [Admin Servers](https://kzcharm.com/admin/servers).
+3. Open the `Server Group` tab.
+4. Create a group for your community, or select an existing group you own.
+5. Copy the API key from the `API Key` column.
+6. Assign your GlobalAPI or public server rows to the same group.
 
-## Renaming The Template
+The API key is sent as `X-Server-Group-Key` by the plugins. Keep it private. If the key is exposed, regenerate it from the `Server Group` tab and update every server using the old key.
 
-To turn this into a real addon:
+## Install
 
-1. Rename `gokz-example.sp` and the `gokz-example/` folder to your plugin name.
-2. Update:
-   - plugin/library name in `AskPluginLoad2`
-   - command names
-   - translation filename
-   - config filename in `AutoExecConfig_SetFile`
-3. Expand the local `include/gokz/core.inc` shim only when your addon needs more of the upstream GOKZ API surface.
+1. Download the latest release package from this repository's GitHub Releases page.
+2. Stop the game server or prepare a plugin reload window.
+3. Copy the package contents into the CS:GO server root so `addons/`, `cfg/`, and `materials/` merge into the existing installation.
+4. Start the server once so `gokz-top-core` can generate its config files.
+
+The API base URL defaults to production GOKZ.TOP. For another deployment, edit:
+
+```text
+cfg/sourcemod/gokz-top/gokz-top-core.cfg
+```
+
+Set the API origin without a trailing slash:
+
+```cfg
+gokz_top_api_base_url "https://kzcharm.com"
+```
+
+## Configure The API Key
+
+After `gokz-top-core` starts once, it creates:
+
+```text
+cfg/sourcemod/gokz-top/apikey.cfg
+```
+
+Paste your server group API key there:
+
+```cfg
+gokz_top_api_key "paste-your-server-group-api-key-here"
+```
+
+Reload the config or restart the server:
+
+```cfg
+exec sourcemod/gokz-top/apikey.cfg
+```
+
+## Verify
+
+After the server is running:
+
+1. Check the SourceMod error logs for `gokz-top-core`, `gokz-top-servers`, `gokz-top-profile`, or `gokz-top-reviews` errors.
+2. Open [Admin Servers](https://kzcharm.com/admin/servers) and confirm the server is assigned to the group using the same API key.
+3. Open the public server browser on [kzcharm.com/servers](https://kzcharm.com/servers) and confirm the server status updates after the heartbeat interval.
 
 ## Local Compile
 
-One simple local compile flow is:
+The repository follows the SourceMod `addons/sourcemod/scripting` layout. To compile locally, use a SourceMod 1.11 package with the required includes and run `spcomp` from `addons/sourcemod/scripting`.
 
-1. Download SourceMod `1.11`.
-2. Copy this repository’s `addons` directory into the SourceMod package.
-3. Run `spcomp` from `addons/sourcemod/scripting`:
+Example:
 
 ```sh
-./spcomp gokz-example.sp
+./spcomp gokz-top-core.sp
+./spcomp gokz-top-servers.sp
+./spcomp gokz-top-profile.sp
+./spcomp gokz-top-reviews.sp
 ```
 
-If you prefer, the GitHub Actions workflow in `.github/workflows/main.yml` can be used as the reference build pipeline.
-
-## Release Tags
-
-Pushes to `main` automatically create a release tag before compiling:
-
-- if no numeric SemVer tag exists, the first tag is `1.0.0`
-- if any pushed commit subject matches Conventional Commit `feat:` or `feat(scope):`, the workflow bumps the minor version, e.g. `1.0.1` → `1.1.0`
-- otherwise the workflow bumps the patch version, e.g. `1.0.0` → `1.0.1`
-- pull requests compile with the short commit SHA instead of creating tags
-- manually pushed tags compile with the tag name as the plugin version
-- every non-PR release build publishes a GitHub Release with full and upgrade zip assets for `GOKZ_VERSION`
-
-## Notes
-
-- This template is for **GOKZ-related addons**, not standalone SourceMod plugins.
-- `gokz-example` is the only shipped sample plugin.
-- The generated config path is `cfg/sourcemod/gokz/gokz-example.cfg`.
+The GitHub Actions workflow is the reference release build.
