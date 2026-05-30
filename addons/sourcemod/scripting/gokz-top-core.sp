@@ -76,9 +76,9 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int errMax)
 
 public void OnPluginStart()
 {
-	AutoExecConfig_SetFile("gokz-top-core", GOKZ_TOP_CFG_FOLDER);
-	AutoExecConfig_SetCreateFile(true);
 	AutoExecConfig_SetCreateDirectory(true);
+	AutoExecConfig_SetCreateFile(true);
+	AutoExecConfig_SetFile("gokz-top-core", GOKZ_TOP_CFG_FOLDER);
 
 	gCV_APIBaseURL = AutoExecConfig_CreateConVar("gokz_top_api_base_url", GOKZ_TOP_DEFAULT_API_BASE_URL,
 		"Base URL for the gokz-top API, without a trailing slash.");
@@ -334,14 +334,14 @@ bool HasAPIKey()
 void CreateAPIKeyConfigIfNotExists()
 {
 	char configPath[PLATFORM_MAX_PATH];
-	BuildPath(Path_SM, configPath, sizeof(configPath), "cfg/%s/apikey.cfg", GOKZ_TOP_CFG_FOLDER);
+	Format(configPath, sizeof(configPath), "cfg/%s/apikey.cfg", GOKZ_TOP_CFG_FOLDER);
 	if (FileExists(configPath))
 	{
 		return;
 	}
 
 	char dirPath[PLATFORM_MAX_PATH];
-	BuildPath(Path_SM, dirPath, sizeof(dirPath), "cfg/%s", GOKZ_TOP_CFG_FOLDER);
+	Format(dirPath, sizeof(dirPath), "cfg/%s", GOKZ_TOP_CFG_FOLDER);
 	if (!DirExists(dirPath))
 	{
 		CreateDirectory(dirPath, 511);
